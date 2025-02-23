@@ -186,27 +186,27 @@ if TYPE_CHECKING:
     from .color import ColorRange, ColorRangeT, Matrix, MatrixT, Primaries, PrimariesT, Transfer, TransferT
     from .generic import ChromaLocation, ChromaLocationT, FieldBased, FieldBasedT
 
-    class _MatrixMeta(PropEnum, vs.MatrixCoefficients):
-        def __new__(cls: type[Matrix], value: MatrixT) -> Matrix:
+    class _MatrixMeta(PropEnum, vs.MatrixCoefficients):  # type: ignore[misc]
+        def __new__(cls: type[Matrix], value: MatrixT) -> Matrix:  # type: ignore[misc]
             ...
 
         @overload
         @classmethod
-        def from_param(
+        def from_param(  # type: ignore[misc]
             cls: type[Matrix], value: None, func_except: FuncExceptT | None = None
         ) -> None:
             ...
 
         @overload
         @classmethod
-        def from_param(
+        def from_param(  # type: ignore[misc]
             cls: type[Matrix], value: int | Matrix | MatrixT, func_except: FuncExceptT | None = None
         ) -> Matrix:
             ...
 
         @overload
         @classmethod
-        def from_param(
+        def from_param(  # type: ignore[misc]
             cls: type[Matrix], value: int | Matrix | MatrixT | None, func_except: FuncExceptT | None = None
         ) -> Matrix | None:
             ...
@@ -223,34 +223,34 @@ if TYPE_CHECKING:
             """
 
         @classmethod
-        def from_param_or_video(
+        def from_param_or_video(  # type: ignore[misc]
             cls: type[Matrix], value: int | Matrix | MatrixT | None,
             src: vs.VideoNode | vs.VideoFrame | vs.FrameProps,
             strict: bool = False, func_except: FuncExceptT | None = None
         ) -> Matrix:
             ...
 
-    class _TransferMeta(PropEnum, vs.TransferCharacteristics):
-        def __new__(cls: type[Transfer], value: TransferT) -> Transfer:
+    class _TransferMeta(PropEnum, vs.TransferCharacteristics):  # type: ignore[misc]
+        def __new__(cls: type[Transfer], value: TransferT) -> Transfer:  # type: ignore[misc]
             ...
 
         @overload
         @classmethod
-        def from_param(
+        def from_param(  # type: ignore[misc]
             cls: type[Transfer], value: None, func_except: FuncExceptT | None = None
         ) -> None:
             ...
 
         @overload
         @classmethod
-        def from_param(
+        def from_param(  # type: ignore[misc]
             cls: type[Transfer], value: int | Transfer | TransferT, func_except: FuncExceptT | None = None
         ) -> Transfer:
             ...
 
         @overload
         @classmethod
-        def from_param(
+        def from_param(  # type: ignore[misc]
             cls: type[Transfer], value: int | Transfer | TransferT | None, func_except: FuncExceptT | None = None
         ) -> Transfer | None:
             ...
@@ -268,34 +268,34 @@ if TYPE_CHECKING:
             """
 
         @classmethod
-        def from_param_or_video(
+        def from_param_or_video(  # type: ignore[misc]
             cls: type[Transfer], value: int | Transfer | TransferT | None,
             src: vs.VideoNode | vs.VideoFrame | vs.FrameProps,
             strict: bool = False, func_except: FuncExceptT | None = None
         ) -> Transfer:
             ...
 
-    class _PrimariesMeta(PropEnum, vs.ColorPrimaries):
-        def __new__(cls: type[Primaries], value: PrimariesT) -> Primaries:
+    class _PrimariesMeta(PropEnum, vs.ColorPrimaries):  # type: ignore[misc]
+        def __new__(cls: type[Primaries], value: PrimariesT) -> Primaries:  # type: ignore[misc]
             ...
 
         @overload
         @classmethod
-        def from_param(
+        def from_param(  # type: ignore[misc]
             cls: type[Primaries], value: None, func_except: FuncExceptT | None = None
         ) -> None:
             ...
 
         @overload
         @classmethod
-        def from_param(
+        def from_param(  # type: ignore[misc]
             cls: type[Primaries], value: int | Primaries | PrimariesT, func_except: FuncExceptT | None = None
         ) -> Primaries:
             ...
 
         @overload
         @classmethod
-        def from_param(
+        def from_param(  # type: ignore[misc]
             cls: type[Primaries], value: int | Primaries | PrimariesT | None, func_except: FuncExceptT | None = None
         ) -> Primaries | None:
             ...
@@ -313,34 +313,34 @@ if TYPE_CHECKING:
             """
 
         @classmethod
-        def from_param_or_video(
+        def from_param_or_video(  # type: ignore[misc]
             cls: type[Primaries], value: int | Primaries | PrimariesT | None,
             src: vs.VideoNode | vs.VideoFrame | vs.FrameProps,
             strict: bool = False, func_except: FuncExceptT | None = None
         ) -> Primaries:
             ...
 
-    class _ColorRangeMeta(PropEnum, vs.ColorPrimaries):
-        def __new__(cls: type[ColorRange], value: ColorRangeT) -> ColorRange:
+    class _ColorRangeMeta(PropEnum, vs.ColorPrimaries):  # type: ignore[misc]
+        def __new__(cls: type[ColorRange], value: ColorRangeT) -> ColorRange:  # type: ignore[misc]
             ...
 
         @overload
         @classmethod
-        def from_param(
+        def from_param(  # type: ignore[misc]
             cls: type[ColorRange], value: None, func_except: FuncExceptT | None = None
         ) -> None:
             ...
 
         @overload
         @classmethod
-        def from_param(
+        def from_param(  # type: ignore[misc]
             cls: type[ColorRange], value: int | ColorRange | ColorRangeT, func_except: FuncExceptT | None = None
         ) -> ColorRange:
             ...
 
         @overload
         @classmethod
-        def from_param(
+        def from_param(  # type: ignore[misc]
             cls: type[ColorRange], value: int | ColorRange | ColorRangeT | None, func_except: FuncExceptT | None = None
         ) -> ColorRange | None:
             ...
@@ -358,27 +358,27 @@ if TYPE_CHECKING:
             """
 
         @classmethod
-        def from_param_or_video(
+        def from_param_or_video(  # type: ignore[misc]
             cls: type[ColorRange], value: int | ColorRange | ColorRangeT | None,
             src: vs.VideoNode | vs.VideoFrame | vs.FrameProps,
             strict: bool = False, func_except: FuncExceptT | None = None
         ) -> ColorRange:
             ...
 
-    class _ChromaLocationMeta(PropEnum, vs.ChromaLocation):
-        def __new__(cls: type[ChromaLocation], value: ChromaLocationT) -> ChromaLocation:
+    class _ChromaLocationMeta(PropEnum, vs.ChromaLocation):  # type: ignore[misc]
+        def __new__(cls: type[ChromaLocation], value: ChromaLocationT) -> ChromaLocation:  # type: ignore[misc]
             ...
 
         @overload
         @classmethod
-        def from_param(
+        def from_param(  # type: ignore[misc]
             cls: type[ChromaLocation], value: None, func_except: FuncExceptT | None = None
         ) -> None:
             ...
 
         @overload
         @classmethod
-        def from_param(
+        def from_param(  # type: ignore[misc]
             cls: type[ChromaLocation], value: int | ChromaLocation | ChromaLocationT,
             func_except: FuncExceptT | None = None
         ) -> ChromaLocation:
@@ -386,7 +386,7 @@ if TYPE_CHECKING:
 
         @overload
         @classmethod
-        def from_param(
+        def from_param(  # type: ignore[misc]
             cls: type[ChromaLocation], value: int | ChromaLocation | ChromaLocationT | None,
             func_except: FuncExceptT | None = None
         ) -> ChromaLocation | None:
@@ -405,39 +405,39 @@ if TYPE_CHECKING:
             """
 
         @classmethod
-        def from_param_or_video(
+        def from_param_or_video(  # type: ignore[misc]
             cls: type[ChromaLocation], value: int | ChromaLocation | ChromaLocationT | None,
             src: vs.VideoNode | vs.VideoFrame | vs.FrameProps,
             strict: bool = False, func_except: FuncExceptT | None = None
         ) -> ChromaLocation:
             ...
 
-    class _FieldBasedMeta(PropEnum, vs.FieldBased):
-        def __new__(cls: type[FieldBased], value: FieldBasedT) -> FieldBased:
+    class _FieldBasedMeta(PropEnum, vs.FieldBased):  # type: ignore[misc]
+        def __new__(cls: type[FieldBased], value: FieldBasedT) -> FieldBased:  # type: ignore[misc]
             ...
 
         @overload
         @classmethod
-        def from_param(
+        def from_param(  # type: ignore[misc]
             cls: type[FieldBased], value_or_tff: None, func_except: FuncExceptT | None = None
         ) -> None:
             ...
 
         @overload
         @classmethod
-        def from_param(
+        def from_param(  # type: ignore[misc]
             cls: type[FieldBased], value_or_tff: int | FieldBasedT | bool, func_except: FuncExceptT | None = None
         ) -> FieldBased:
             ...
 
         @overload
         @classmethod
-        def from_param(
+        def from_param(  # type: ignore[misc]
             cls: type[FieldBased], value_or_tff: int | FieldBasedT | bool | None, func_except: FuncExceptT | None = None
         ) -> FieldBased | None:
             ...
 
-        @classmethod
+        @classmethod  # type: ignore[misc]
         def from_param(cls: Any, value: Any, func_except: Any = None) -> FieldBased | None:
             """
             Determine the type of field through a parameter.
@@ -451,7 +451,7 @@ if TYPE_CHECKING:
             """
 
         @classmethod
-        def from_param_or_video(
+        def from_param_or_video(  # type: ignore[misc]
             cls: type[FieldBased], value_or_tff: int | FieldBasedT | bool | None,
             src: vs.VideoNode | vs.VideoFrame | vs.FrameProps,
             strict: bool = False, func_except: FuncExceptT | None = None
