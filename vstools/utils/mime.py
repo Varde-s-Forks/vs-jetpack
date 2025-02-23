@@ -239,7 +239,7 @@ class FileType(FileTypeBase):
                 fbase, ftype, *_ = value.split('/')
 
                 if fbase == 'index':
-                    return FileType.INDEX(ftype)
+                    return FileType.INDEX(ftype)  # type: ignore[misc]
 
                 if value.endswith('-image'):
                     return FileType.IMAGE
