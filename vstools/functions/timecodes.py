@@ -347,10 +347,6 @@ class Keyframes(list[int]):
 
             self.indices = LinearRangeLut(self)
 
-    @overload  # type: ignore
-    def __init__(self, iterable: Iterable[int]) -> None:
-        ...
-
     def __init__(self, iterable: Iterable[int] = [], *, _dummy: bool = False) -> None:
         super().__init__(sorted(list(iterable)))
 
