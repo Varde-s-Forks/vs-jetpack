@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fractions import Fraction
 from math import gcd as max_common_div
-from typing import Callable, Iterable, NamedTuple, Self, TypeVar, overload
+from typing import Callable, Iterable, NamedTuple, Self, overload
 
 import vapoursynth as vs
 from jetpytools import Coordinate, CustomIntEnum, CustomStrEnum, FuncExceptT, Position, Sentinel, SentinelT, Size
@@ -156,7 +156,7 @@ class Sar(Fraction):
     """
 
     @classmethod
-    def from_clip(cls: type[SarSelf], clip: HoldsPropValueT) -> SarSelf:
+    def from_clip(cls, clip: HoldsPropValueT) -> Self:
         """
         Get the SAR from the clip's frame properties.
 
@@ -170,7 +170,7 @@ class Sar(Fraction):
         return cls(get_prop(clip, '_SARNum', int, None, 1), get_prop(clip, '_SARDen', int, None, 1))
 
     @classmethod
-    def from_ar(cls: type[SarSelf], num: int, den: int, active_area: float, height: int) -> SarSelf:
+    def from_ar(cls, num: int, den: int, active_area: float, height: int) -> Self:
         """
         Calculate the SAR from the given display aspect ratio and active image area.
         This method is used to obtain metadata to set in the video container for anamorphic video.
@@ -189,7 +189,7 @@ class Sar(Fraction):
         return cls(Dar(num, den).to_sar(active_area, height))
 
     @classmethod
-    def from_dar(cls: type[SarSelf], dar: Dar, active_area: float, height: int) -> SarSelf:
+    def from_dar(cls, dar: Dar, active_area: float, height: int) -> Self:
         """Calculate the SAR using a DAR object. See ``Dar.to_sar`` for more information."""
 
         sar_n, sar_d = dar.numerator * height, dar.denominator * active_area
@@ -205,9 +205,6 @@ class Sar(Fraction):
         """Apply the SAR values as _SARNum and _SARDen frame properties to a clip."""
 
         return clip.std.SetFrameProps(_SARNum=self.numerator, _SARDen=self.denominator)
-
-
-SarSelf = TypeVar('SarSelf', bound=Sar)
 
 
 class Region(CustomStrEnum):

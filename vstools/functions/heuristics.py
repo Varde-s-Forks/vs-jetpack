@@ -7,7 +7,7 @@ from jetpytools import KwargsT
 from vstools import PropEnum
 
 from ..enums import ChromaLocation, ColorRange, Matrix, Primaries, Transfer
-from ..enums.stubs import SelfPropEnum
+from ..enums.stubs import PropEnumT
 
 __all__ = [
     'video_heuristics',
@@ -64,7 +64,7 @@ def video_heuristics(
     else:
         props_dict = props or None
 
-    def try_or_fallback(prop_type: type[SelfPropEnum]) -> SelfPropEnum:
+    def try_or_fallback(prop_type: type[PropEnumT]) -> PropEnumT:
         try:
             assert props_dict
             if prop_type.prop_key in props_dict:

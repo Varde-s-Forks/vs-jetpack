@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from string import capwords
-from typing import TYPE_CHECKING, Any, Iterable, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Iterable, Self, TypeVar, overload
 
 import vapoursynth as vs
 from jetpytools import MISSING, CustomError, CustomIntEnum, FuncExceptT, classproperty
@@ -21,76 +21,78 @@ __all__ = [
 
 
 class PropEnum(CustomIntEnum):
+    __name__: str
+
     @classmethod
-    def is_unknown(cls: type[SelfPropEnum], value: int | SelfPropEnum) -> bool:
+    def is_unknown(cls, value: int | Self) -> bool:
         """Whether the value represents an unknown value."""
 
         return False
 
     @classproperty
-    def prop_key(cls: type[SelfPropEnum]) -> str:  # type: ignore
+    def prop_key(cls) -> str:
         """The key used in props to store the enum."""
 
         return f'_{cls.__name__}'
 
     if TYPE_CHECKING:
         def __new__(
-            cls: type[SelfPropEnum], value: int | SelfPropEnum | vs.VideoNode | vs.VideoFrame | vs.FrameProps
-        ) -> SelfPropEnum:
+            cls, value: int | Self | vs.VideoNode | vs.VideoFrame | vs.FrameProps
+        ) -> Self:
             ...
 
         @overload
         @classmethod
         def from_param(
-            cls: type[SelfPropEnum], value: None, func_except: FuncExceptT | None = None
+            cls, value: None, func_except: FuncExceptT | None = None
         ) -> None:
             ...
 
         @overload
         @classmethod
         def from_param(
-            cls: type[SelfPropEnum], value: int | SelfPropEnum, func_except: FuncExceptT | None = None
-        ) -> SelfPropEnum:
+            cls, value: int | Self, func_except: FuncExceptT | None = None
+        ) -> Self:
             ...
 
         @overload
         @classmethod
         def from_param(
-            cls: type[SelfPropEnum], value: int | SelfPropEnum | None, func_except: FuncExceptT | None = None
-        ) -> SelfPropEnum | None:
+            cls, value: int | Self | None, func_except: FuncExceptT | None = None
+        ) -> Self | None:
             ...
 
         @classmethod
-        def from_param(cls: type[SelfPropEnum], value: Any, func_except: Any = None) -> SelfPropEnum | None:
+        def from_param(cls, value: Any, func_except: Any = None) -> Self | None:
             """Get the enum member from its int representation."""
 
     @classmethod
-    def _missing_(cls: type[SelfPropEnum], value: Any) -> SelfPropEnum | None:
+    def _missing_(cls, value: Any) -> Self | None:
         if isinstance(value, vs.VideoNode | vs.VideoFrame | vs.FrameProps):
             return cls.from_video(value)
         return super().from_param(value)
 
     @classmethod
-    def from_res(cls: type[SelfPropEnum], frame: vs.VideoNode | vs.VideoFrame) -> SelfPropEnum:
+    def from_res(cls, frame: vs.VideoNode | vs.VideoFrame) -> Self:
         """Get an enum member from the video resolution with heuristics."""
 
         raise NotImplementedError
 
     @classmethod
     def from_video(
-        cls: type[SelfPropEnum], src: vs.VideoNode | vs.VideoFrame | vs.FrameProps, strict: bool = False,
+        cls, src: vs.VideoNode | vs.VideoFrame | vs.FrameProps, strict: bool = False,
         func: FuncExceptT | None = None
-    ) -> SelfPropEnum:
+    ) -> Self:
         """Get an enum member from the frame properties or optionally fall back to resolution when strict=False."""
 
         raise NotImplementedError
 
     @classmethod
     def from_param_or_video(
-        cls: type[SelfPropEnum], value: Any,
+        cls, value: Any,
         src: vs.VideoNode | vs.VideoFrame | vs.FrameProps,
         strict: bool = False, func_except: FuncExceptT | None = None
-    ) -> SelfPropEnum:
+    ) -> Self:
         """
         Get the enum member from a value that can be casted to this prop value
         or grab it from frame properties.
@@ -111,7 +113,7 @@ class PropEnum(CustomIntEnum):
 
     @classmethod
     def ensure_presence(
-        cls: type[SelfPropEnum], clip: vs.VideoNode, value: int | SelfPropEnum | None, func: FuncExceptT | None = None
+        cls, clip: vs.VideoNode, value: int | Self | None, func: FuncExceptT | None = None
     ) -> vs.VideoNode:
         """Ensure the presence of the property in the VideoNode."""
 
@@ -126,7 +128,7 @@ class PropEnum(CustomIntEnum):
 
     @staticmethod
     def ensure_presences(
-        clip: vs.VideoNode, prop_enums: Iterable[type[SelfPropEnum] | SelfPropEnum], func: FuncExceptT | None = None
+        clip: vs.VideoNode, prop_enums: Iterable[type[PropEnumT] | PropEnumT], func: FuncExceptT | None = None
     ) -> vs.VideoNode:
         """Ensure the presence of multiple PropEnums at once."""
 
@@ -156,13 +158,13 @@ class PropEnum(CustomIntEnum):
         return int(value) in map(int, cls.__members__.values())
 
 
-SelfPropEnum = TypeVar('SelfPropEnum', bound=PropEnum)
+PropEnumT = TypeVar('PropEnumT', bound=PropEnum)
 
 
 def _base_from_video(
-    cls: type[SelfPropEnum], src: vs.VideoNode | vs.VideoFrame | vs.FrameProps, exception: type[CustomError],
+    cls: type[PropEnumT], src: vs.VideoNode | vs.VideoFrame | vs.FrameProps, exception: type[CustomError],
     strict: bool, func: FuncExceptT | None = None
-) -> SelfPropEnum:
+) -> PropEnumT:
     from ..utils import get_prop
 
     func = func or cls.from_video
