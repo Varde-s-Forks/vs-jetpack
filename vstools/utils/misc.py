@@ -6,7 +6,8 @@ from types import TracebackType
 from typing import Any, Callable, Iterable, Sequence, TypeVar, cast, overload
 
 import vapoursynth as vs
-from jetpytools import MISSING
+
+from jetpytools import MISSING, MissingT
 
 from ..enums import Align, BaseAlign
 from ..exceptions import InvalidSubsamplingError
@@ -216,7 +217,7 @@ class _padder:
 
     def COLOR(
         self, clip: vs.VideoNode, left: int = 0, right: int = 0, top: int = 0, bottom: int = 0,
-        color: int | float | bool | None | Sequence[int | float | bool | None] = (False, MISSING)
+        color: int | float | bool | None | MissingT | Sequence[int | float | bool | None | MissingT] = (False, MISSING)
     ) -> vs.VideoNode:
         """
         Pad a clip with a constant color.
