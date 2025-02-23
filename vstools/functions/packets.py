@@ -4,12 +4,15 @@ import io
 import json
 import shutil
 import warnings
+
 from subprocess import PIPE, Popen
 from tempfile import NamedTemporaryFile
-from typing import Self, TypedDict
+from typing import TypedDict
 
 import vapoursynth as vs
+
 from jetpytools import CustomValueError, DependencyNotFoundError, FuncExceptT, SPath, SPathLike
+from typing_extensions import Self
 
 from .file import PackageStorage
 from .timecodes import Keyframes

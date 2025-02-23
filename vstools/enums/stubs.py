@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from string import capwords
-from typing import TYPE_CHECKING, Any, Iterable, Self, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Iterable, TypeVar, overload
 
 import vapoursynth as vs
+
 from jetpytools import MISSING, CustomError, CustomIntEnum, FuncExceptT, classproperty
+from typing_extensions import Self
 
 __all__ = [
     'PropEnum',

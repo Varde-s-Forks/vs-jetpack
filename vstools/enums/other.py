@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from fractions import Fraction
 from math import gcd as max_common_div
-from typing import Callable, Iterable, NamedTuple, Self, overload
+from typing import Callable, Iterable, NamedTuple, overload
 
 import vapoursynth as vs
+
 from jetpytools import Coordinate, CustomIntEnum, CustomStrEnum, FuncExceptT, Position, Sentinel, SentinelT, Size
+from typing_extensions import Self
 
 from ..types import HoldsPropValueT
 

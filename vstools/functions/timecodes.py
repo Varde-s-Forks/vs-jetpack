@@ -1,18 +1,21 @@
 from __future__ import annotations
 
 import re
+
 from dataclasses import dataclass
 from fractions import Fraction
 from pathlib import Path
-from typing import Any, ClassVar, Iterable, NamedTuple, Self, TypeVar, overload
+from typing import Any, ClassVar, Iterable, NamedTuple, TypeVar, overload
 
 import vapoursynth as vs
+
 from jetpytools import CustomValueError, FilePathType, FuncExceptT, LinearRangeLut, Sentinel, SPath, inject_self
+from typing_extensions import Self
 
 from ..enums import Matrix, SceneChangeMode
 from ..exceptions import FramesLengthError, InvalidTimecodeVersionError
-from .render import clip_async_render
 from .file import PackageStorage
+from .render import clip_async_render
 
 __all__ = [
     'Timecodes',
