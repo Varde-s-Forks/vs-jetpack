@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Literal, overload
+from typing import Any, Literal, cast, overload
 
 import vapoursynth as vs
 from jetpytools import KwargsT
@@ -60,7 +60,7 @@ def video_heuristics(
 
     if props is True:
         with clip.get_frame(0) as frame:
-            props_dict = frame.props.copy()
+            props_dict = cast(vs.FrameProps, frame.props.copy())
     else:
         props_dict = props or None
 
