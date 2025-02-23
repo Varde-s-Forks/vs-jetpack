@@ -149,15 +149,17 @@ class Timecodes(list[Timecode]):
         return major_time, acc_ranges
 
     @classmethod
-    def from_clip(cls: type[TimecodesBoundT], clip: vs.VideoNode, **kwargs: Any) -> TimecodesBoundT:
+    def from_clip(cls, clip: vs.VideoNode, **kwargs: Any) -> Self:
         """
         Get the timecodes from a given clip.
 
         :param clip:        Clip to gather metrics from.
         :param kwargs:      Keyword arguments to pass on to `clip_async_render`.
         """
+        from ..utils import get_prop
+
         def _get_timecode(n: int, f: vs.VideoFrame) -> Timecode:
-            return Timecode(n, f.props._DurationNum, f.props._DurationDen)
+            return Timecode(n, get_prop(f, "_DurationNum", int), get_prop(f, "_DurationDen", int))
 
         return cls(clip_async_render(clip, None, 'Fetching timecodes...', _get_timecode, **kwargs))
 
