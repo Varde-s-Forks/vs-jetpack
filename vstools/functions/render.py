@@ -328,7 +328,7 @@ def prop_compare_cb(
 @overload
 def find_prop(
     src: vs.VideoNode, prop: str, op: str | Callable[[float, float], bool] | None, ref: float | bool,
-    range_length: Literal[0], async_requests: int = 1
+    range_length: Literal[0] = ..., async_requests: int = 1
 ) -> list[int]:
     ...
 
@@ -336,14 +336,14 @@ def find_prop(
 @overload
 def find_prop(
     src: vs.VideoNode, prop: str, op: str | Callable[[float, float], bool] | None, ref: float | bool,
-    range_length: int, async_requests: int = 1
+    range_length: int = ..., async_requests: int = 1
 ) -> list[tuple[int, int]]:
     ...
 
 
 def find_prop(
     src: vs.VideoNode, prop: str, op: str | Callable[[float, float], bool] | None, ref: float | bool,
-    range_length: int, async_requests: int = 1
+    range_length: int = 0, async_requests: int = 1
 ) -> list[int] | list[tuple[int, int]]:
     """
     Find specific frame props in the clip and return a list of frame ranges that meets the conditions.
