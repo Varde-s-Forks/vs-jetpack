@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable, Sequence
+from typing import Iterable, Sequence, cast
 
 import vapoursynth as vs
 from jetpytools import FuncExceptT, T, cachedproperty, fallback, iterate, kwargs_fallback, normalize_seq, to_arr
@@ -91,10 +91,14 @@ class FunctionUtil(cachedproperty.baseclass, list[int]):
 
         assert check_variable(clip, func)
 
+        all_color_family: list[vs.ColorFamily] | None
+
         if color_family is not None:
             all_color_family = [get_color_family(c) for c in to_arr(color_family)]  # type: ignore[arg-type]
-            if not set(color_family) & {vs.YUV, vs.RGB}:
+            if not set(all_color_family) & {vs.YUV, vs.RGB}:
                 planes = 0
+        else:
+            all_color_family = color_family
 
         if isinstance(bitdepth, tuple):
             bitdepth = range(bitdepth[0], bitdepth[1] + 1)
@@ -102,16 +106,16 @@ class FunctionUtil(cachedproperty.baseclass, list[int]):
         self.clip = clip
         self.planes = planes
         self.func = func
-        self.allowed_cfamilies = color_family
+        self.allowed_cfamilies = all_color_family
         self.cfamily_converted = False
         self.bitdepth = bitdepth
 
-        self._matrix = matrix
-        self._transfer = transfer
-        self._primaries = primaries
-        self._range_in = range_in
-        self._chromaloc = chromaloc
-        self._order = order
+        self._matrix = Matrix.from_param(matrix, self.func)
+        self._transfer = Transfer.from_param(transfer, self.func)
+        self._primaries = Primaries.from_param(primaries, self.func)
+        self._range_in = ColorRange.from_param(range_in, self.func)
+        self._chromaloc = ChromaLocation.from_param(chromaloc, self.func)
+        self._order = FieldBased.from_param(order, self.func)
 
         self.norm_planes = normalize_planes(self.norm_clip, self.planes)
 
@@ -135,7 +139,7 @@ class FunctionUtil(cachedproperty.baseclass, list[int]):
         else:
             clip = self.clip
 
-        assert clip.format
+        assert check_variable(clip, self.func)
 
         cfamily = clip.format.color_family
 
@@ -153,20 +157,20 @@ class FunctionUtil(cachedproperty.baseclass, list[int]):
 
             self.cfamily_converted = True
 
-            clip = clip.resize.Bicubic(format=clip.format.replace(color_family=vs.YUV), matrix=self._matrix)
+            clip = clip.resize.Bicubic(format=clip.format.replace(color_family=vs.YUV).id, matrix=self._matrix)
 
         elif cfamily in (vs.YUV, vs.GRAY) and not set(self.allowed_cfamilies) & {vs.YUV, vs.GRAY} or self.planes not in (0, [0]):
             self.cfamily_converted = True
 
             clip = clip.resize.Bicubic(
-                format=clip.format.replace(color_family=vs.RGB, subsampling_h=0, subsampling_w=0),
+                format=clip.format.replace(color_family=vs.RGB, subsampling_h=0, subsampling_w=0).id,
                 matrix_in=self._matrix, chromaloc_in=self._chromaloc,
                 range_in=self._range_in.value_zimg if self._range_in else None
             )
 
             InvalidColorspacePathError.check(self.func, clip)
 
-        return clip
+        return cast(ConstantFormatVideoNode, clip)
 
     @cachedproperty
     def work_clip(self) -> ConstantFormatVideoNode:
@@ -306,7 +310,7 @@ class FunctionUtil(cachedproperty.baseclass, list[int]):
 
         if self.cfamily_converted:
             processed = processed.resize.Bicubic(
-                format=self.clip.format,
+                format=self.clip.format.id,
                 matrix=self.matrix if self.norm_clip.format.color_family is vs.RGB else None,
                 chromaloc=self.chromaloc, range=self.color_range.value_zimg
             )
