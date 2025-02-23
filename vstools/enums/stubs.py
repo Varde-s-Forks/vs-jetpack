@@ -61,7 +61,7 @@ class PropEnum(CustomIntEnum):
             ...
 
         @classmethod
-        def from_param(cls: Any, value: Any, func_except: Any = None) -> SelfPropEnum | None:
+        def from_param(cls: type[SelfPropEnum], value: Any, func_except: Any = None) -> SelfPropEnum | None:
             """Get the enum member from its int representation."""
 
     @classmethod
@@ -105,7 +105,7 @@ class PropEnum(CustomIntEnum):
         value = cls.from_param(value, func_except)
 
         if value is not None:
-            return value  # type: ignore
+            return value
 
         return cls.from_video(src, strict, func_except)
 
@@ -119,7 +119,7 @@ class PropEnum(CustomIntEnum):
 
         return clip.std.SetFrameProp(enum_value.prop_key, enum_value.value)
 
-    def apply(self: SelfPropEnum, clip: vs.VideoNode) -> vs.VideoNode:
+    def apply(self, clip: vs.VideoNode) -> vs.VideoNode:
         """Applies the property to the VideoNode."""
 
         return clip.std.SetFrameProp(self.prop_key, self.value)
@@ -131,7 +131,7 @@ class PropEnum(CustomIntEnum):
         """Ensure the presence of multiple PropEnums at once."""
 
         return clip.std.SetFrameProps(**{
-            value.prop_key: value.value  # type: ignore
+            value.prop_key: value.value
             for value in [
                 cls if isinstance(cls, PropEnum) else cls.from_video(clip, True)
                 for cls in prop_enums
@@ -177,9 +177,9 @@ def _base_from_video(
             raise exception('Can\'t determine {class_name} from FrameProps.', func, class_name=cls)
 
         if all(hasattr(src, x) for x in ('width', 'height')):
-            return cls.from_res(src)
+            return cls.from_res(src)  # type: ignore[arg-type]
 
-    return cls(value)
+    return cls(value)  # type: ignore[arg-type]
 
 
 if TYPE_CHECKING:
