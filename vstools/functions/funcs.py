@@ -92,7 +92,7 @@ class FunctionUtil(cachedproperty.baseclass, list[int]):
         assert check_variable(clip, func)
 
         if color_family is not None:
-            color_family = [get_color_family(c) for c in to_arr(color_family)]
+            all_color_family = [get_color_family(c) for c in to_arr(color_family)]  # type: ignore[arg-type]
             if not set(color_family) & {vs.YUV, vs.RGB}:
                 planes = 0
 
