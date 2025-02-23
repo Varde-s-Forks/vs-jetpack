@@ -52,8 +52,8 @@ class vs_object(ABC, metaclass=ABCMeta):
 
         if hasattr(self, '__vs_del__'):
             def _register(core_id: int) -> None:
-                self.__vsdel_partial_register = partial(self.__vs_del__, core_id)
-                core.register_on_destroy(self.__vsdel_partial_register)
+                self.__vsdel_partial_register = partial(self.__vs_del__, core_id)  # type: ignore[attr-defined]
+                core.register_on_destroy(self.__vsdel_partial_register)  # type: ignore[attr-defined]
 
             # [un]register_on_creation/destroy will only hold a weakref to the object
             self.__vsdel_register = _register
