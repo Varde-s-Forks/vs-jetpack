@@ -4,7 +4,7 @@ import re
 from dataclasses import dataclass
 from fractions import Fraction
 from pathlib import Path
-from typing import Any, ClassVar, Iterable, NamedTuple, TypeVar, overload
+from typing import Any, ClassVar, Iterable, NamedTuple, Self, TypeVar, overload
 
 import vapoursynth as vs
 from jetpytools import CustomValueError, FilePathType, FuncExceptT, LinearRangeLut, Sentinel, SPath, inject_self
@@ -164,34 +164,38 @@ class Timecodes(list[Timecode]):
     @overload
     @classmethod
     def from_file(
-        cls: type[TimecodesBoundT], file: FilePathType, ref: vs.VideoNode, *, func: FuncExceptT | None = None
-    ) -> TimecodesBoundT:
-        ...
-
-    @overload
-    @classmethod
-    def from_file(
-        cls: type[TimecodesBoundT],
-        file: FilePathType, length: int, den: int | None = None, *, func: FuncExceptT | None = None
-    ) -> TimecodesBoundT:
-        ...
-
-    @classmethod  # type: ignore
-    def from_file(
-        cls: type[TimecodesBoundT], file: FilePathType, ref_or_length: int | vs.VideoNode, den: int | None = None,
-        *, func: FuncExceptT | None = None
-    ) -> TimecodesBoundT:
+        cls, file: FilePathType, ref: vs.VideoNode, /, *, func: FuncExceptT | None = None
+    ) -> Self:
         """
         Read the timecodes from a given file.
 
         :param file:            File to read.
-        :param ref_or_length:   Reference clip to get the total number of frames from.
-                                If int, take that as the total number of frames.
+        :param ref:             Reference clip to get the total number of frames from.
+        :param func:            Function returned for custom error handling.
+                                This should only be set by VS package developers.
+        """
+
+    @overload
+    @classmethod
+    def from_file(
+        cls, file: FilePathType, length: int, den: int | None = None, /, func: FuncExceptT | None = None
+    ) -> Self:
+        """
+        Read the timecodes from a given file.
+
+        :param file:            File to read.
+        :param length:          Total number of frames.
         :param den:             The denominator. If None, try to obtain it from the ref if possible,
                                 else fall back to 1001.
         :param func:            Function returned for custom error handling.
                                 This should only be set by VS package developers.
         """
+
+    @classmethod
+    def from_file(
+        cls, file: FilePathType, ref_or_length: int | vs.VideoNode, den: int | None = None,
+        /, func: FuncExceptT | None = None
+    ) -> Self:
         func = func or cls.from_file
 
         file = Path(str(file)).resolve()
@@ -315,9 +319,6 @@ class Timecodes(list[Timecode]):
         out_path.unlink(True)
         out_path.touch()
         out_path.write_text('\n'.join(out_text + ['']))
-
-
-TimecodesBoundT = TypeVar('TimecodesBoundT', bound=Timecodes)
 
 
 class Keyframes(list[int]):
