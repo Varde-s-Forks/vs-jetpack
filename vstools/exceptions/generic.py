@@ -276,7 +276,7 @@ class LengthMismatchError(MismatchError):
 
     if TYPE_CHECKING:
         @classmethod
-        def check(  # type: ignore[override]
+        def check(
             cls, func: FuncExceptT, *lengths: int | Sized, **kwargs: Any
         ) -> None:
             ...

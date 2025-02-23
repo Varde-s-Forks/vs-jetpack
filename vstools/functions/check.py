@@ -122,18 +122,16 @@ def check_ref_clip(src: vs.VideoNode, ref: vs.VideoNode | None, func: FuncExcept
     :return:        Ref clip.
     """
 
-    from .funcs import fallback
-
     if ref is None:
         return src
 
-    func = fallback(func, check_ref_clip)
+    func = func or check_ref_clip
 
-    assert check_variable(src, func)  # type: ignore
-    assert check_variable(ref, func)  # type: ignore
+    assert check_variable(src, func)
+    assert check_variable(ref, func)
 
-    FormatsRefClipMismatchError.check(func, src, ref)  # type: ignore
-    ResolutionsRefClipMismatchError.check(func, src, ref)  # type: ignore
+    FormatsRefClipMismatchError.check(func, src, ref)
+    ResolutionsRefClipMismatchError.check(func, src, ref)
 
     return ref
 

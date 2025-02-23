@@ -275,11 +275,11 @@ class proxy_utils:
 
     @staticmethod
     def get_plugin(func: FunctionProxy) -> tuple[PluginProxy, str]:
-        return func.__dict__['func_ref']  # type: ignore
+        return func.__dict__['func_ref']
 
     @staticmethod
     def get_core(plugin: PluginProxy) -> tuple[CoreProxy, str]:
-        return plugin.__dict__['plugin_ref']  # type: ignore
+        return plugin.__dict__['plugin_ref']
 
 
 def vstools_isinstance(
@@ -504,7 +504,7 @@ class VSCoreProxy(CoreProxyBase):
         if 'proxied' not in _objproxies[self]:
             _objproxies[self]['proxied'] = CoreProxy(_get_core(self), self, True)
 
-        return _objproxies[self]['proxied']  # type: ignore
+        return _objproxies[self]['proxied']
 
     @property
     def lazy(self) -> CoreProxy:
@@ -520,7 +520,7 @@ class VSCoreProxy(CoreProxyBase):
         if 'lazy' not in _objproxies[self]:
             _objproxies[self]['lazy'] = CoreProxy(None, self, True)
 
-        return _objproxies[self]['lazy']  # type: ignore
+        return _objproxies[self]['lazy']
 
     def register_on_destroy(self, callback: Callable[..., None], on_forced: bool = True) -> None:
         """Register a callback on this core destroy."""
@@ -561,7 +561,7 @@ class VSCoreProxy(CoreProxyBase):
         """
 
         try:
-            from psutil import Process  # type: ignore
+            from psutil import Process
         except ModuleNotFoundError as e:
             from ..exceptions import DependencyNotFoundError
 

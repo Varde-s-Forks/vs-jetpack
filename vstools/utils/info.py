@@ -100,7 +100,7 @@ def get_framerate(clip: vs.VideoNode | Fraction | tuple[int, int] | float) -> Fr
     """Get the framerate from any object holding it."""
 
     if isinstance(clip, vs.VideoNode):
-        return clip.fps  # type: ignore
+        return clip.fps
 
     if isinstance(clip, Fraction):
         return clip
