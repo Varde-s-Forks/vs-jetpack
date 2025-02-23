@@ -298,14 +298,14 @@ class ProcessVariableClip(DynamicClipsCache[T]):
 
     @classmethod
     def from_clip(
-        cls: type[ProcVarClipSelf],
+        cls,
         clip: vs.VideoNode
     ) -> vs.VideoNode:
         return cls(clip).eval_clip()
 
     @classmethod
     def from_func(
-        cls: type[ProcVarClipSelf],
+        cls,
         clip: vs.VideoNode,
         func: Callable[[vs.VideoNode], vs.VideoNode],
         out_dim: tuple[int, int] | Literal[False] | None = None,
@@ -317,7 +317,7 @@ class ProcessVariableClip(DynamicClipsCache[T]):
 
         return _inner(clip, out_dim, out_fmt, cache_size).eval_clip()
 
-    def get_key(self, frame: vs.VideoFrame) -> T:
+    def get_key(self, frame: vs.VideoNode | vs.VideoFrame) -> T:
         raise NotImplementedError
 
     def normalize(self, clip: vs.VideoNode, cast_to: T) -> vs.VideoNode:
@@ -327,11 +327,8 @@ class ProcessVariableClip(DynamicClipsCache[T]):
         return clip
 
 
-ProcVarClipSelf = TypeVar('ProcVarClipSelf', bound=ProcessVariableClip)  # type: ignore
-
-
 class ProcessVariableResClip(ProcessVariableClip[tuple[int, int]]):
-    def get_key(self, frame: vs.VideoFrame) -> tuple[int, int]:
+    def get_key(self, frame: vs.VideoNode | vs.VideoFrame) -> tuple[int, int]:
         return (frame.width, frame.height)
 
     def normalize(self, clip: vs.VideoNode, cast_to: tuple[int, int]) -> vs.VideoNode:
@@ -339,16 +336,19 @@ class ProcessVariableResClip(ProcessVariableClip[tuple[int, int]]):
 
 
 class ProcessVariableFormatClip(ProcessVariableClip[vs.VideoFormat]):
-    def get_key(self, frame: vs.VideoFrame) -> vs.VideoFormat:
+    def get_key(self, frame: vs.VideoNode | vs.VideoFrame) -> vs.VideoFormat:
+        assert frame.format
         return frame.format
 
     def normalize(self, clip: vs.VideoNode, cast_to: vs.VideoFormat) -> vs.VideoNode:
-        return clip.std.RemoveFrameProps().resize.Point(format=cast_to).std.CopyFrameProps(clip)
+        return clip.std.RemoveFrameProps().resize.Point(format=cast_to.id).std.CopyFrameProps(clip)
 
 
 class ProcessVariableResFormatClip(ProcessVariableClip[tuple[int, int, vs.VideoFormat]]):
-    def get_key(self, frame: vs.VideoFrame) -> tuple[int, int, vs.VideoFormat]:
+    def get_key(self, frame: vs.VideoNode | vs.VideoFrame) -> tuple[int, int, vs.VideoFormat]:
+        assert frame.format
         return (frame.width, frame.height, frame.format)
 
     def normalize(self, clip: vs.VideoNode, cast_to: tuple[int, int, vs.VideoFormat]) -> vs.VideoNode:
-        return clip.std.RemoveFrameProps().resize.Point(*cast_to).std.CopyFrameProps(clip)
+        w, h, fmt = cast_to
+        return clip.std.RemoveFrameProps().resize.Point(w, h, fmt.id).std.CopyFrameProps(clip)
