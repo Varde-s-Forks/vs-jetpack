@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from fractions import Fraction
 from math import gcd as max_common_div
-from typing import Callable, Iterable, Literal, NamedTuple, TypeVar, overload
+from typing import Callable, Iterable, NamedTuple, Self, TypeVar, overload
 
 import vapoursynth as vs
-from jetpytools import Coordinate, CustomIntEnum, CustomStrEnum, FuncExceptT, Position, Sentinel, Size
+from jetpytools import Coordinate, CustomIntEnum, CustomStrEnum, FuncExceptT, Position, Sentinel, SentinelT, Size
 
 from ..types import HoldsPropValueT
 
@@ -62,12 +62,12 @@ class Dar(Fraction):
     @overload
     @classmethod
     def from_size(
-        cls: type[DarSelf],
+        cls,
         width: int,
         height: int,
         sar: Sar | bool = True, /,
         func: FuncExceptT | None = ...
-    ) -> DarSelf:
+    ) -> Self:
         """
         Get the Display Aspect Ratio from the clip's dimensions or Sample Aspect Ratio (SAR).
 
@@ -83,11 +83,11 @@ class Dar(Fraction):
     @overload
     @classmethod
     def from_size(
-        cls: type[DarSelf],
+        cls,
         clip: vs.VideoNode,
-        sar: Sar | bool = True, /,
+        sar: Sar | bool = True, /, *,
         func: FuncExceptT | None = ...
-    ) -> DarSelf:
+    ) -> Self:
         """
         Get the Display Aspect Ratio from the clip's Sample Aspect Ratio (SAR).
 
@@ -101,28 +101,27 @@ class Dar(Fraction):
 
     @classmethod
     def from_size(
-        cls: type[DarSelf],
-        clip_width: vs.VideoNode | int,
-        _height: int | Sar | bool = True,
-        _sar: Sar | bool = True,
+        cls,
+        width_or_clip: int | vs.VideoNode,
+        height_or_sar: int | Sar | bool = True,
+        sar: Sar | bool = True,
         /,
         func: FuncExceptT | None = None
-    ) -> DarSelf:
-        width: int
-        height: int
-        sar: Sar | Literal[False]
-
-        if isinstance(clip_width, vs.VideoNode):
+    ) -> Self:
+        if isinstance(width_or_clip, vs.VideoNode) and isinstance(height_or_sar, (Sar, bool)):
             from ..functions import check_variable_resolution
 
-            check_variable_resolution(clip_width, func or cls.from_size)
+            clip = width_or_clip
 
-            width, height, sar = clip_width.width, clip_width.height, _height  # type: ignore
+            check_variable_resolution(clip, func or cls.from_size)
+
+            width, height, sar = clip.width, clip.height, height_or_sar
 
             if sar is True:
-                sar = Sar.from_clip(clip_width)  # type: ignore
-        else:
-            width, height, sar = clip_width, _height, _sar if isinstance(_sar, Sar) else False  # type: ignore
+                sar = Sar.from_clip(clip)
+
+        elif isinstance(width_or_clip, int) and isinstance(height_or_sar, int):
+            width, height = width_or_clip, height_or_sar
 
         gcd = max_common_div(width, height)
 
@@ -141,9 +140,6 @@ class Dar(Fraction):
         :return:                A SAR object created using the DAR.
         """
         return Sar.from_dar(self, active_area, height)
-
-
-DarSelf = TypeVar('DarSelf', bound=Dar)
 
 
 class Sar(Fraction):
