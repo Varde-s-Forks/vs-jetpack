@@ -50,7 +50,8 @@ def get_video_format(
         sample_type = vs.SampleType(sample_type)
 
     if isinstance(value, vs.VideoFormat):
-        return value
+        # TODO: mypy bug
+        return value  # type: ignore[return-value]
 
     if isinstance(value, VSPresetVideoFormat):
         return vs.core.get_video_format(value)
@@ -64,12 +65,15 @@ def get_video_format(
 
         return vs.core.query_video_format(vs.YUV, sample_type, value)
 
-    assert value.format
+    # TODO: mypy bug
+    assert value.format  # type: ignore[union-attr]
 
     if sample_type is not None:
-        return value.format.replace(sample_type=sample_type)
+        # TODO: mypy bug
+        return value.format.replace(sample_type=sample_type)  # type: ignore[union-attr]
 
-    return value.format
+    # TODO: mypy bug
+    return value.format  # type: ignore[union-attr]
 
 
 def get_depth(clip: VideoFormatT | HoldsVideoFormatT, /) -> int:
