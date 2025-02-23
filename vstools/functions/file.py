@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import inspect
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from jetpytools import CustomRuntimeError, SPath, get_script_path
 
@@ -23,7 +24,8 @@ class PackageStorage:
             if module:
                 package_name = module.__name__
 
-            frame = module = None
+            if not TYPE_CHECKING:
+                frame = module = None
 
         if not package_name:
             raise CustomRuntimeError('Can\'t determine package name!')
