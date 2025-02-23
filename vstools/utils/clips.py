@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 import inspect
-from functools import partial, wraps
-from typing import Any, Callable, Literal, TypeVar, cast, overload
 
-from jetpytools import CustomValueError, FuncExceptT, KwargsT, T, fallback
+from functools import partial, wraps
+from typing import Any, Callable, Literal, cast, overload
+
+from jetpytools import CustomValueError, FuncExceptT, KwargsT, T
 
 from ..enums import (
-    ChromaLocation, ChromaLocationT, ColorRange, ColorRangeT, FieldBased, FieldBasedT, Matrix, MatrixT, Primaries,
-    PrimariesT, PropEnum, Transfer, TransferT
+    ChromaLocation, ChromaLocationT, ColorRange, ColorRangeT, FieldBased, FieldBasedT, Matrix,
+    MatrixT, Primaries, PrimariesT, PropEnum, Transfer, TransferT
 )
 from ..functions import DitherType, check_variable, depth
 from ..types import F_VD, HoldsVideoFormatT, VideoFormatT
@@ -145,7 +146,7 @@ def initialize_clip(
     :return:                Clip with relevant frame properties set, and optionally dithered up to 16 bits by default.
     """
 
-    func = fallback(func, initialize_clip)
+    func = func or initialize_clip
 
     values: list[tuple[type[PropEnum], Any]] = [
         (Matrix, matrix),
