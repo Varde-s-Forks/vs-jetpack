@@ -394,7 +394,7 @@ class SceneChangeMode(CustomIntEnum):
 
         return (lambda f: f.props[prop_key] == 1)
 
-    def lambda_cb(self, akarin: bool | None = None) -> Callable[[int, vs.VideoFrame], Sentinel.Type | int]:
+    def lambda_cb(self, akarin: bool | None = None) -> Callable[[int, vs.VideoFrame], SentinelT | int]:
         callback = self.check_cb(akarin)
         return (lambda n, f: Sentinel.check(n, callback(f)))
 
