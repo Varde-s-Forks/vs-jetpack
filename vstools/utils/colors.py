@@ -210,6 +210,8 @@ class ResampleGRAY(ResampleYUV):
         self, clip: vs.VideoNode, fp32: bool | None = None, func: FuncExceptT | None = None, **kwargs: Any
     ) -> vs.VideoNode:
 
+        assert clip.format
+
         if fp32 is None or (32 if fp32 else 16) == clip.format.bits_per_sample:
             return plane(clip, 0)
 
