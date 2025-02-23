@@ -143,11 +143,11 @@ def scale_delta(
 
     if isinstance(input_depth, vs.VideoNode) != isinstance(output_depth, vs.VideoNode):
         if isinstance(input_depth, vs.VideoNode):
-            clip_range = input_depth
-        if isinstance(output_depth, vs.VideoNode):
-            clip_range = output_depth
+            clip_range = ColorRange.from_video(input_depth)
 
-        clip_range = ColorRange.from_video(clip_range)
+        if isinstance(output_depth, vs.VideoNode):
+            clip_range = ColorRange.from_video(output_depth)
+
         range_in = clip_range if range_in is None else range_in
         range_out = clip_range if range_out is None else range_out
 
