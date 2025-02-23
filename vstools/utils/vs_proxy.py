@@ -202,7 +202,7 @@ class FunctionProxy(FunctionProxyBase):
 
     def __getattr__(self, name: str) -> Function:
         if name == '__isabstractmethod__':
-            return False
+            return False  # type: ignore[return-value]
 
         function = proxy_utils.get_vs_function(self)
 
