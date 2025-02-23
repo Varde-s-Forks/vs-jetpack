@@ -278,7 +278,7 @@ class ProcessVariableClip(DynamicClipsCache[T]):
         if out_fmt is False:
             bk_args.update(format=vs.GRAY8, varformat=True)
         else:
-            bk_args.update(format=out_fmt)
+            bk_args.update(format=out_fmt if isinstance(out_fmt, int) else out_fmt.id)
 
         super().__init__(cache_size)
 
