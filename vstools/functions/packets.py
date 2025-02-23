@@ -238,7 +238,7 @@ class VideoPackets(list[int]):
         if not keyframes:
             return clip.std.FrameEval(_set_sizes_props)
 
-        def _set_scene_stats(n: int) -> vs.VideoNode:
+        def _set_scene_stats(n: int, keyframes: Keyframes) -> vs.VideoNode:
             if (pkt_size := self[n]) < 0:
                 warnings.warn(f'{func}: \'Frame {n} bitrate could not be determined!\'')
 
@@ -256,4 +256,4 @@ class VideoPackets(list[int]):
 
         scenestats = self.get_scenestats(keyframes)
 
-        return clip.std.FrameEval(_set_scene_stats)
+        return clip.std.FrameEval(lambda n: _set_scene_stats(n, keyframes))
