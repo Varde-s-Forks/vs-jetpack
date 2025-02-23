@@ -75,7 +75,7 @@ VSObjSelf = TypeVar('VSObjSelf', bound=vs_object)
 class VSDebug(Singleton, init=True):
     """Special class that follows the VapourSynth lifecycle for debug purposes."""
 
-    _print_func = print
+    _print_func: Callable[..., None] = print
 
     def __init__(self, *, env_life: bool = True, core_fetch: bool = False, use_logging: bool = False) -> None:
         """
