@@ -170,8 +170,8 @@ class DitherType(CustomStrEnum):
     @staticmethod
     def should_dither(
         in_bits: int, out_bits: int, /,
+        in_range: ColorRangeT | None = None, out_range: ColorRangeT | None = None,
         in_sample_type: vs.SampleType | None = None, out_sample_type: vs.SampleType | None = None,
-        in_range: ColorRangeT | None = None, out_range: ColorRangeT | None = None
     ) -> bool:
         """
         Automatically determines whether dithering is needed for a given depth/range/sample type conversion.
@@ -199,18 +199,17 @@ class DitherType(CustomStrEnum):
         :return:                    Whether the clip should be dithered.
         """
 
-    @staticmethod  # type: ignore
+    @staticmethod
     def should_dither(
         in_bits_or_fmt: int | VideoFormatT | HoldsVideoFormatT,
         out_bits_or_fmt: int | VideoFormatT | HoldsVideoFormatT, /,
-        in_sample_type_or_range: vs.SampleType | ColorRangeT | None = None,
-        out_sample_type_or_range: vs.SampleType | ColorRangeT | None = None,
         in_range: ColorRangeT | None = None, out_range: ColorRangeT | None = None,
+        in_sample_type: vs.SampleType | None = None, out_sample_type: vs.SampleType | None = None,
     ) -> bool:
         from ..utils import get_video_format
 
-        in_fmt = get_video_format(in_bits_or_fmt, sample_type=in_sample_type_or_range)
-        out_fmt = get_video_format(out_bits_or_fmt, sample_type=out_sample_type_or_range)
+        in_fmt = get_video_format(in_bits_or_fmt, sample_type=in_sample_type)
+        out_fmt = get_video_format(out_bits_or_fmt, sample_type=out_sample_type)
 
         in_range = ColorRange.from_param(in_range, (DitherType.should_dither, 'in_range'))
         out_range = ColorRange.from_param(out_range, (DitherType.should_dither, 'out_range'))
@@ -232,8 +231,8 @@ class DitherType(CustomStrEnum):
 
         if in_bits > out_bits:
             return True
-
-        return in_range == ColorRange.FULL and out_bits % in_bits
+        
+        return in_range == ColorRange.FULL and bool(out_bits % in_bits)
 
 
 _dither_fmtc_types: dict[DitherType, int] = {
