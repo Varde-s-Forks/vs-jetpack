@@ -57,6 +57,8 @@ def scale_value(
             range_in = ColorRange.FULL
         else:
             range_in = ColorRange.LIMITED
+    else:
+        range_in = ColorRange.from_param(range_in, scale_value)
 
     if range_out is None:
         if isinstance(output_depth, vs.VideoNode):
@@ -65,6 +67,8 @@ def scale_value(
             range_out = ColorRange.FULL
         else:
             range_out = ColorRange.LIMITED
+    else:
+        range_out = ColorRange.from_param(range_out, scale_value)
 
     if input_depth == output_depth and range_in == range_out and in_fmt.sample_type == out_fmt.sample_type:
         return out_value
