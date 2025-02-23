@@ -246,13 +246,14 @@ class _padder:
         """
 
         from ..functions import normalize_seq
-        from ..utils import (get_lowest_values, get_neutral_values,
-                             get_peak_values)
+        from ..utils import get_lowest_values, get_neutral_values, get_peak_values
 
         self._base(clip, left, right, top, bottom)
 
-        def _norm(colr: int | float | bool | None | MISSING) -> Sequence[int | float]:
-            if MISSING:
+        def _norm(colr: int | float | bool | None | MissingT) -> Sequence[int | float]:
+            assert clip.format
+
+            if colr is MISSING:
                 colr = False if clip.format.color_family is vs.RGB else None
 
             if colr is False:
