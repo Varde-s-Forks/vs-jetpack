@@ -294,10 +294,9 @@ def depth(
     """
 
     from ..utils import get_video_format
-    from .funcs import fallback
 
     in_fmt = get_video_format(clip)
-    out_fmt = get_video_format(fallback(bitdepth, clip), sample_type=sample_type)
+    out_fmt = get_video_format(bitdepth or clip, sample_type=sample_type)
 
     range_out = ColorRange.from_param_or_video(range_out, clip)
     range_in = ColorRange.from_param_or_video(range_in, clip)
