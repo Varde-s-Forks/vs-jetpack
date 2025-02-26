@@ -1,4 +1,4 @@
-name: Lint Python code with Ruff
+name: Lint Python code with Ruff & mypy
 
 on:
   push:
