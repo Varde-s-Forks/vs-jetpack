@@ -1,4 +1,4 @@
-name: Lint Python code with Ruff
+name: Lint Python code with Ruff & mypy
 
 on:
   push:
@@ -11,12 +11,11 @@ on:
       - '**.py'
 
 jobs:
-  windows:
-    runs-on: windows-latest
+  lint:
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        vs-versions:
-          - 70
+        vs-versions: [70]
         python-version: ['3.10', '3.11', '3.12']
 
     steps:
@@ -27,12 +26,23 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up VapourSynth ${{ matrix.vs-versions }}
+        uses: ./.github/actions/setup-vapoursynth
+        with:
+          vapoursynth-version: ${{ matrix.vs-versions }}
+
       - name: Install dependencies
         run: |
-          python3 -m pip install --upgrade pip
-          pip install vapoursynth-portable==${{ matrix.vs-versions }}
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+          uv venv
+          uv pip install -r requirements.txt -r requirements-dev.txt
 
       - name: Running ruff
-        run: ruff check .
+        run: uv run ruff check .
+
+      - name: Running mypy on vstools
+        run: uv run mypy vstools
