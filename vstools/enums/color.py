@@ -26,7 +26,7 @@ __all__ = [
 ]
 
 
-class Matrix(_MatrixMeta):
+class Matrix(_MatrixMeta):  # type: ignore[misc]
     """Matrix coefficients ([ITU-T H.265](https://www.itu.int/rec/T-REC-H.265) Table E.5)."""
 
     _value_: int
@@ -287,7 +287,7 @@ class Matrix(_MatrixMeta):
         return _matrix_name_map.get(self, super().string)
 
 
-class Transfer(_TransferMeta):
+class Transfer(_TransferMeta):  # type: ignore[misc]
     """Transfer characteristics ([ITU-T H.265](https://www.itu.int/rec/T-REC-H.265) Table E.4)."""
 
     _value_: int
@@ -561,7 +561,7 @@ class Transfer(_TransferMeta):
         return _transfer_name_map.get(self, super().string)
 
 
-class Primaries(_PrimariesMeta):
+class Primaries(_PrimariesMeta):  # type: ignore[misc]
     """Color primaries ([ITU-T H.265](https://www.itu.int/rec/T-REC-H.265) Table E.3)."""
 
     _value_: int
@@ -986,7 +986,7 @@ class MatrixCoefficients(NamedTuple):
         return _primaries_matrixcoeff_map[primaries]
 
 
-class ColorRange(_ColorRangeMeta):
+class ColorRange(_ColorRangeMeta):  # type: ignore[misc]
     """Pixel Range ([ITU-T H.265](https://www.itu.int/rec/T-REC-H.265) Equations E-10 through E-20."""
 
     _value_: int

@@ -18,7 +18,7 @@ __all__ = [
 ]
 
 
-class ChromaLocation(_ChromaLocationMeta):
+class ChromaLocation(_ChromaLocationMeta):  # type: ignore[misc]
     """Chroma sample position in YUV formats."""
 
     _value_: int
@@ -113,7 +113,7 @@ class ChromaLocation(_ChromaLocationMeta):
         return off_left, off_top
 
 
-class FieldBased(_FieldBasedMeta):
+class FieldBased(_FieldBasedMeta):  # type: ignore[misc]
     """Whether the frame is composed of two independent fields (interlaced) and their order if so."""
 
     _value_: int

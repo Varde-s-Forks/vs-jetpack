@@ -55,7 +55,7 @@ else:
 
 ################################################
 
-class PresetVideoFormat(PresetVideoFormatBase):
+class PresetVideoFormat(PresetVideoFormatBase):  # type: ignore[misc]
     if not TYPE_CHECKING:
         GRAY8 = MAKE_VIDEO_ID(GRAY, INTEGER, 8, 0, 0)
         GRAY9 = MAKE_VIDEO_ID(GRAY, INTEGER, 9, 0, 0)
@@ -123,8 +123,9 @@ class PresetVideoFormat(PresetVideoFormatBase):
     YUV420P31 = MAKE_VIDEO_ID(YUV, INTEGER, 31, 1, 1)
     YUV420P32 = MAKE_VIDEO_ID(YUV, INTEGER, 32, 1, 1)
 
-    YUV420PH = MAKE_VIDEO_ID(YUV, FLOAT, 16, 1, 1)
-    YUV420PS = MAKE_VIDEO_ID(YUV, FLOAT, 32, 1, 1)
+    if not TYPE_CHECKING:
+        YUV420PH = MAKE_VIDEO_ID(YUV, FLOAT, 16, 1, 1)
+        YUV420PS = MAKE_VIDEO_ID(YUV, FLOAT, 32, 1, 1)
 
     ################################################
 
@@ -194,8 +195,9 @@ class PresetVideoFormat(PresetVideoFormatBase):
     YUV422P31 = MAKE_VIDEO_ID(YUV, INTEGER, 31, 1, 0)
     YUV422P32 = MAKE_VIDEO_ID(YUV, INTEGER, 32, 1, 0)
 
-    YUV422PH = MAKE_VIDEO_ID(YUV, FLOAT, 16, 1, 0)
-    YUV422PS = MAKE_VIDEO_ID(YUV, FLOAT, 32, 1, 0)
+    if not TYPE_CHECKING:
+        YUV422PH = MAKE_VIDEO_ID(YUV, FLOAT, 16, 1, 0)
+        YUV422PS = MAKE_VIDEO_ID(YUV, FLOAT, 32, 1, 0)
 
     ################################################
 
