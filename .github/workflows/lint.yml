@@ -12,7 +12,7 @@ on:
 
 jobs:
   windows:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         vs-versions: [70]
