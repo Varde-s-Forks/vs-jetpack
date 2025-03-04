@@ -1,4 +1,5 @@
 name: Set up VapourSynth
+
 description: Build and install VapourSynth
 inputs:
   vapoursynth-version:
