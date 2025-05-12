@@ -214,6 +214,7 @@ class EEDI3(SuperSampler, Deinterlacer):
 
     def _deinterlacer_function(self, clip: vs.VideoNode, tff: bool, dh: bool, **kwargs: Any) -> ConstantFormatVideoNode:
         field = int(tff) if dh else int(tff) + (int(self.double_rate) * 2)
+        mult = (0 if dh else int(self.double_rate)) + 1
 
         func = getattr(core.eedi3m, 'EEDI3CL' if self.opencl else 'EEDI3')
 
@@ -226,11 +227,11 @@ class EEDI3(SuperSampler, Deinterlacer):
             kwargs.update(mclip=self.mclip(clip))
 
         if sclip := kwargs.get('sclip'):
-            if sclip.num_frames * 2 == clip.num_frames * int(self.double_rate) + 1:
+            if sclip.num_frames * 2 == clip.num_frames * mult:
                 kwargs.update(sclip=sclip.std.SeperateFields(tff).std.DoubleWeave(tff))
 
         if mclip := kwargs.get('mclip'):
-            if mclip.num_frames * 2 == clip.num_frames * int(self.double_rate) + 1:
+            if mclip.num_frames * 2 == clip.num_frames * mult:
                 kwargs.update(mclip=mclip.std.SeperateFields(tff).std.DoubleWeave(tff))
 
         return func(clip, field, dh, **kwargs)
