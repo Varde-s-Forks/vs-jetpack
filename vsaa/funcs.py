@@ -39,12 +39,12 @@ def pre_aa(
             if x == AADirection.HORIZONTAL:
                 wclip = deinterlacer.transpose(wclip)
 
-            bob = deinterlacer.deinterlace(wclip)
+            aa = deinterlacer.antialias(wclip, AADirection.VERTICAL)
             sharp = sharpener(wclip)
-            wclip = MeanMode.MEDIAN(sharp, wclip, bob[::2], bob[1::2])
+            limit = MeanMode.MEDIAN(wclip, aa, sharp)
 
             if x == AADirection.HORIZONTAL:
-                wclip = deinterlacer.transpose(wclip)
+                wclip = deinterlacer.transpose(limit)
 
     return func.return_clip(wclip)
 

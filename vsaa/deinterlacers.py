@@ -228,11 +228,11 @@ class EEDI3(SuperSampler, Deinterlacer):
 
         if sclip := kwargs.get('sclip'):
             if sclip.num_frames * 2 == clip.num_frames * mult:
-                kwargs.update(sclip=sclip.std.SeperateFields(tff).std.DoubleWeave(tff))
+                kwargs.update(sclip=core.std.Interleave([sclip] * 2))
 
         if mclip := kwargs.get('mclip'):
             if mclip.num_frames * 2 == clip.num_frames * mult:
-                kwargs.update(mclip=mclip.std.SeperateFields(tff).std.DoubleWeave(tff))
+                kwargs.update(mclip=core.std.Interleave([mclip] * 2))
 
         return func(clip, field, dh, **kwargs)
 
