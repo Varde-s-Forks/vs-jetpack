@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, replace
 from enum import IntFlag, auto
-from functools import partial
 from typing import Any, Sequence
 
 from jetpytools import inject_self
@@ -9,8 +8,8 @@ from typing_extensions import Self
 
 from vskernels import LeftShift, Scaler, TopShift
 from vstools import (
-    ChromaLocation, ConstantFormatVideoNode, VSFunctionNoArgs, check_variable, core, fallback, normalize_seq, vs,
-    vs_object
+    ChromaLocation, ConstantFormatVideoNode, VSFunctionAllArgs, VSFunctionNoArgs, check_variable, core, fallback,
+    normalize_seq, vs, vs_object
 )
 
 
@@ -26,18 +25,24 @@ class Deinterlacer(vs_object, ABC):
     double_rate: bool = True
     transpose_first: bool = False
 
+    @property
     @abstractmethod
-    def _deinterlacer_function(
-        self, clip: vs.VideoNode, tff: bool, dh: bool, **kwargs: Any
-    ) -> partial[ConstantFormatVideoNode]:
-        ...
+    def _deinterlacer_function(self) -> VSFunctionAllArgs[vs.VideoNode, ConstantFormatVideoNode]:
+        """Get the plugin function"""
 
     @abstractmethod
-    def get_deint_args(self, clip: vs.VideoNode, dh: bool, **kwargs: Any) -> dict[str, Any]:
+    def _interpolate(self, clip: vs.VideoNode, tff: bool, dh: bool, **kwargs: Any) -> ConstantFormatVideoNode:
+        """
+        Performs deinterlacing if dh is False or doubling if dh is True.
+        Should handle tff to field if needed and should add the kwargs from `get_deint_args`
+        """
+
+    @abstractmethod
+    def get_deint_args(self, **kwargs: Any) -> dict[str, Any]:
         return kwargs
 
     def deinterlace(self, clip: vs.VideoNode, **kwargs: Any) -> ConstantFormatVideoNode:
-        return self._deinterlacer_function(clip, self.tff, dh=False, **self.get_deint_args(clip, dh=False, **kwargs))()
+        return self._interpolate(clip, self.tff, False, **kwargs)
 
     def antialias(
         self, clip: vs.VideoNode, direction: AADirection = AADirection.BOTH, **kwargs: Any
@@ -49,9 +54,7 @@ class Deinterlacer(vs_object, ABC):
                 if y == AADirection.HORIZONTAL:
                     clip = self.transpose(clip)
 
-                clip = self._deinterlacer_function(
-                    clip, self.tff, False, **self.get_deint_args(clip, False, **kwargs)
-                )()
+                clip = self.deinterlace(clip, **kwargs)
 
                 if self.double_rate:
                     clip = core.std.Merge(clip[::2], clip[1::2])
@@ -116,7 +119,7 @@ class SuperSampler(Deinterlacer, Scaler, ABC):
                 if is_width:
                     clip = self.transpose(clip)
 
-                clip = self._deinterlacer_function(clip, tff, True, **self.get_deint_args(clip, True, **kwargs))()
+                clip = self._interpolate(clip, tff, True, **kwargs)
 
                 if is_width:
                     clip = self.transpose(clip)
@@ -137,16 +140,16 @@ class NNEDI3(SuperSampler, Deinterlacer):
     pscrn: int | None = None
     opencl: bool = False
 
-    def _deinterlacer_function(
-        self, clip: vs.VideoNode, tff: bool, dh: bool, **kwargs: Any
-    ) -> partial[ConstantFormatVideoNode]:
+    @property
+    def _deinterlacer_function(self) -> VSFunctionAllArgs[vs.VideoNode, ConstantFormatVideoNode]:
+        return core.lazy.sneedif.NNEDI3 if self.opencl else core.lazy.znedi3.nnedi3
+
+    def _interpolate(self, clip: vs.VideoNode, tff: bool, dh: bool, **kwargs: Any) -> ConstantFormatVideoNode:
         field = int(tff) + (int(self.double_rate) * 2)
 
-        func = core.lazy.sneedif.NNEDI3 if self.opencl else core.lazy.znedi3.nnedi3
+        return self._deinterlacer_function(clip, field, dh, **self.get_deint_args(**kwargs))
 
-        return partial(func, clip, field, dh, **kwargs)
-
-    def get_deint_args(self, clip: vs.VideoNode, dh: bool, **kwargs: Any) -> dict[str, Any]:
+    def get_deint_args(self, **kwargs: Any) -> dict[str, Any]:
         return dict(
             nsize=self.nsize,
             nns=self.nns,
@@ -182,12 +185,12 @@ class EEDI2(SuperSampler, Deinterlacer):
     pp: int | None = None
     cuda: bool = False
 
-    def _deinterlacer_function(
-        self, clip: vs.VideoNode, tff: bool, dh: bool, **kwargs: Any
-    ) -> partial[ConstantFormatVideoNode]:
-        field = int(tff)
+    @property
+    def _deinterlacer_function(self) -> VSFunctionAllArgs[vs.VideoNode, ConstantFormatVideoNode]:
+        return core.lazy.eedi2cuda.EEDI2 if self.cuda else core.lazy.eedi2.EEDI2
 
-        func = core.lazy.eedi2cuda.EEDI2 if self.cuda else core.lazy.eedi2.EEDI2
+    def _interpolate(self, clip: vs.VideoNode, tff: bool, dh: bool, **kwargs: Any) -> ConstantFormatVideoNode:
+        field = int(tff)
 
         if not dh:
             field += int(self.double_rate) * 2
@@ -196,9 +199,9 @@ class EEDI2(SuperSampler, Deinterlacer):
             if not self.double_rate:
                 clip = clip[::2]
 
-        return partial(func, clip, field, **kwargs)
+        return self._deinterlacer_function(clip, field, **self.get_deint_args(**kwargs))
 
-    def get_deint_args(self, clip: vs.VideoNode, dh: bool, **kwargs: Any) -> dict[str, Any]:
+    def get_deint_args(self, **kwargs: Any) -> dict[str, Any]:
         return dict(
             mthresh=self.mthresh,
             lthresh=self.lthresh,
@@ -233,43 +236,14 @@ class EEDI3(SuperSampler, Deinterlacer):
     mclip: vs.VideoNode | VSFunctionNoArgs[vs.VideoNode, ConstantFormatVideoNode] | None = None
     opencl: bool = False
 
-    def _deinterlacer_function(
-        self, clip: vs.VideoNode, tff: bool, dh: bool, **kwargs: Any
-    ) -> partial[ConstantFormatVideoNode]:
+    @property
+    def _deinterlacer_function(self) -> VSFunctionAllArgs[vs.VideoNode, ConstantFormatVideoNode]:
+        return core.lazy.eedi3m.EEDI3CL if self.opencl else core.lazy.eedi3m.EEDI3
+
+    def _interpolate(self, clip: vs.VideoNode, tff: bool, dh: bool, **kwargs: Any) -> ConstantFormatVideoNode:
         field = int(tff) if dh else int(tff) + (int(self.double_rate) * 2)
 
-        func = core.lazy.eedi3m.EEDI3CL if self.opencl else core.lazy.eedi3m.EEDI3
-
-        return partial(func, clip, field, dh, **kwargs)
-
-    def transpose(self, clip: vs.VideoNode) -> ConstantFormatVideoNode:
-        if isinstance(self.sclip, vs.VideoNode):
-            self.sclip = self.sclip.std.Transpose()
-
-        if isinstance(self.mclip, vs.VideoNode):
-            self.mclip = self.mclip.std.Transpose()
-
-        return super().transpose(clip)
-
-    def get_deint_args(self, clip: vs.VideoNode, dh: bool, **kwargs: Any) -> dict[str, Any]:
-        self.vthresh = normalize_seq(self.vthresh, 3)
-
-        kwargs = dict(
-            alpha=self.alpha,
-            beta=self.beta,
-            gamma=self.gamma,
-            nrad=self.nrad,
-            mdis=self.mdis,
-            hp=self.hp,
-            ucubic=self.ucubic,
-            cost3=self.cost3,
-            vcheck=self.vcheck,
-            vthresh0=self.vthresh[0],
-            vthresh1=self.vthresh[1],
-            vthresh2=self.vthresh[2],
-            sclip=self.sclip,
-            mclip=self.mclip
-        ) | kwargs
+        kwargs = self.get_deint_args(**kwargs)
 
         if callable(self.sclip):
             kwargs.update(sclip=self.sclip(clip))
@@ -287,7 +261,36 @@ class EEDI3(SuperSampler, Deinterlacer):
             if mclip.num_frames * 2 == clip.num_frames * mult:
                 kwargs.update(mclip=core.std.Interleave([mclip] * 2))
 
-        return kwargs
+        return self._deinterlacer_function(clip, field, dh, **kwargs)
+
+    def transpose(self, clip: vs.VideoNode) -> ConstantFormatVideoNode:
+        if isinstance(self.sclip, vs.VideoNode):
+            self.sclip = self.sclip.std.Transpose()
+
+        if isinstance(self.mclip, vs.VideoNode):
+            self.mclip = self.mclip.std.Transpose()
+
+        return super().transpose(clip)
+
+    def get_deint_args(self, **kwargs: Any) -> dict[str, Any]:
+        self.vthresh = normalize_seq(self.vthresh, 3)
+
+        return dict(
+            alpha=self.alpha,
+            beta=self.beta,
+            gamma=self.gamma,
+            nrad=self.nrad,
+            mdis=self.mdis,
+            hp=self.hp,
+            ucubic=self.ucubic,
+            cost3=self.cost3,
+            vcheck=self.vcheck,
+            vthresh0=self.vthresh[0],
+            vthresh1=self.vthresh[1],
+            vthresh2=self.vthresh[2],
+            sclip=self.sclip,
+            mclip=self.mclip
+        ) | kwargs
 
     # TODO: Change this when #94 is merged 
     @inject_self.cached.property
@@ -303,18 +306,20 @@ class EEDI3(SuperSampler, Deinterlacer):
 class SANGNOM(SuperSampler, Deinterlacer):
     aa: Sequence[int | None] | None = None
 
-    def _deinterlacer_function(
-        self, clip: vs.VideoNode, tff: bool, dh: bool, **kwargs: Any
-    ) -> partial[ConstantFormatVideoNode]:
+    @property
+    def _deinterlacer_function(self) -> VSFunctionAllArgs[vs.VideoNode, ConstantFormatVideoNode]:
+        return core.lazy.sangnom.SangNom
+
+    def _interpolate(self, clip: vs.VideoNode, tff: bool, dh: bool, **kwargs: Any) -> ConstantFormatVideoNode:
         if self.double_rate and not dh:
             order = 0
             clip = clip.std.SeparateFields(tff).std.DoubleWeave(tff)
         else:
             order = 1 if tff else 2
 
-        return partial(core.sangnom.SangNom, clip, order, dh, **kwargs)
+        return self._deinterlacer_function(clip, order, dh, **self.get_deint_args(**kwargs))
 
-    def get_deint_args(self, clip: vs.VideoNode, dh: bool, **kwargs: Any) -> dict[str, Any]:
+    def get_deint_args(self, **kwargs: Any) -> dict[str, Any]:
         return dict(aa=self.aa) | kwargs
 
     _static_kernel_radius = 3
