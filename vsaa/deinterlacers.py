@@ -9,8 +9,7 @@ from typing_extensions import Self
 
 from vskernels import LeftShift, Scaler, TopShift
 from vstools import (
-    ChromaLocation, ConstantFormatVideoNode, VSFunctionAllArgs,
-    check_variable, core, normalize_seq, vs, fallback, VSFunctionNoArgs
+    ChromaLocation, ConstantFormatVideoNode, VSFunctionNoArgs, check_variable, core, fallback, normalize_seq, vs
 )
 
 
@@ -223,7 +222,7 @@ class EEDI3(SuperSampler, Deinterlacer):
     ucubic: bool | None = None
     cost3: bool | None = None
     vcheck: int | None = None
-    vthresh: list[float | None] | None = None
+    vthresh: Sequence[float | None] | None = None
     sclip: vs.VideoNode | VSFunctionNoArgs[vs.VideoNode, ConstantFormatVideoNode] | None = None
     mclip: vs.VideoNode | VSFunctionNoArgs[vs.VideoNode, ConstantFormatVideoNode] | None = None
     opencl: bool = False
@@ -291,7 +290,7 @@ class EEDI3(SuperSampler, Deinterlacer):
 
 @dataclass
 class SANGNOM(SuperSampler, Deinterlacer):
-    aa: list[int | None] | None = None
+    aa: Sequence[int | None] | None = None
 
     def _deinterlacer_function(
         self, clip: vs.VideoNode, tff: bool, dh: bool, **kwargs: Any
