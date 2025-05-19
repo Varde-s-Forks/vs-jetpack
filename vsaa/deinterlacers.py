@@ -39,13 +39,15 @@ class Deinterlacer(ABC):
     def deinterlace(self, clip: vs.VideoNode, **kwargs: Any) -> ConstantFormatVideoNode:
         return self._deinterlacer_function(clip, self.tff, dh=False, **self.get_deint_args(clip, dh=False, **kwargs))()
 
-    def antialias(self, clip: vs.VideoNode, direction: AADirection = AADirection.BOTH, **kwargs: Any) -> ConstantFormatVideoNode:
+    def antialias(
+        self, clip: vs.VideoNode, direction: AADirection = AADirection.BOTH, **kwargs: Any
+    ) -> ConstantFormatVideoNode:
         assert check_variable(clip, self.antialias)
 
         for y in sorted((aa_dir for aa_dir in AADirection), key=lambda x: x.value, reverse=self.transpose_first):
             if direction in (y, AADirection.BOTH):
                 if y == AADirection.HORIZONTAL:
-                    clip = self.transpose(clip)
+                    clip = self._transpose(clip)
 
                 clip = self._deinterlacer_function(
                     clip, self.tff, False, **self.get_deint_args(clip, False, **kwargs)
@@ -55,11 +57,11 @@ class Deinterlacer(ABC):
                     clip = core.std.Merge(clip[::2], clip[1::2])
 
                 if y == AADirection.HORIZONTAL:
-                    clip = self.transpose(clip)
+                    clip = self._transpose(clip)
 
         return clip
 
-    def transpose(self, clip: vs.VideoNode) -> ConstantFormatVideoNode:
+    def _transpose(self, clip: vs.VideoNode) -> ConstantFormatVideoNode:
         return clip.std.Transpose()
 
     def copy(self, **kwargs: Any) -> Self:
@@ -110,12 +112,12 @@ class SuperSampler(Deinterlacer, Scaler, ABC):
                         nshift[x][y] = (nshift[x][y] + (-0.25 if tff else 0.25) * subsampling[x]) * 2 - cloc[x]
 
                 if is_width:
-                    clip = self.transpose(clip)
+                    clip = self._transpose(clip)
 
                 clip = self._deinterlacer_function(clip, tff, True, **self.get_deint_args(clip, True, **kwargs))()
 
                 if is_width:
-                    clip = self.transpose(clip)
+                    clip = self._transpose(clip)
 
         if not self.transpose_first:
             nshift.reverse()
@@ -235,14 +237,14 @@ class EEDI3(SuperSampler, Deinterlacer):
 
         return partial(func, clip, field, dh, **kwargs)
 
-    def transpose(self, clip: vs.VideoNode) -> ConstantFormatVideoNode:
+    def _transpose(self, clip: vs.VideoNode) -> ConstantFormatVideoNode:
         if isinstance(self.sclip, vs.VideoNode):
             self.sclip = self.sclip.std.Transpose()
 
         if isinstance(self.mclip, vs.VideoNode):
             self.mclip = self.mclip.std.Transpose()
 
-        return super().transpose(clip)
+        return super()._transpose(clip)
 
     def get_deint_args(self, clip: vs.VideoNode, dh: bool, **kwargs: Any) -> dict[str, Any]:
         self.vthresh = normalize_seq(self.vthresh, 3)
