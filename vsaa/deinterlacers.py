@@ -1,7 +1,8 @@
-from abc import ABC
-from dataclasses import KW_ONLY, dataclass, replace
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, replace
 from enum import IntFlag, auto
-from typing import Any, ClassVar
+from functools import partial
+from typing import Any, Sequence
 
 from jetpytools import inject_self
 from typing_extensions import Self
@@ -19,17 +20,24 @@ class AADirection(IntFlag):
     BOTH = VERTICAL | HORIZONTAL
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Deinterlacer(ABC):
-    _deinterlacer_function: ClassVar[VSFunctionAllArgs[vs.VideoNode, ConstantFormatVideoNode]]
-
-    _: KW_ONLY
     tff: bool = False
     double_rate: bool = True
     transpose_first: bool = False
 
+    @abstractmethod
+    def _deinterlacer_function(
+        self, clip: vs.VideoNode, tff: bool, dh: bool, **kwargs: Any
+    ) -> partial[ConstantFormatVideoNode]:
+        ...
+
+    @abstractmethod
+    def get_deint_args(self, clip: vs.VideoNode, dh: bool, **kwargs: Any) -> dict[str, Any]:
+        return kwargs
+
     def deinterlace(self, clip: vs.VideoNode, **kwargs: Any) -> ConstantFormatVideoNode:
-        return self._deinterlacer_function(clip, self.tff, False, **kwargs)
+        return self._deinterlacer_function(clip, self.tff, dh=False, **self.get_deint_args(clip, dh=False, **kwargs))()
 
     def antialias(self, clip: vs.VideoNode, direction: AADirection = AADirection.BOTH, **kwargs: Any) -> ConstantFormatVideoNode:
         assert check_variable(clip, self.antialias)
@@ -39,7 +47,9 @@ class Deinterlacer(ABC):
                 if y == AADirection.HORIZONTAL:
                     clip = self.transpose(clip)
 
-                clip = self._deinterlacer_function(clip, self.tff, False, **kwargs)
+                clip = self._deinterlacer_function(
+                    clip, self.tff, False, **self.get_deint_args(clip, False, **kwargs)
+                )()
 
                 if self.double_rate:
                     clip = core.std.Merge(clip[::2], clip[1::2])
@@ -102,7 +112,7 @@ class SuperSampler(Deinterlacer, Scaler, ABC):
                 if is_width:
                     clip = self.transpose(clip)
 
-                clip = self._deinterlacer_function(clip, tff, True, **kwargs)
+                clip = self._deinterlacer_function(clip, tff, True, **self.get_deint_args(clip, True, **kwargs))()
 
                 if is_width:
                     clip = self.transpose(clip)
@@ -122,14 +132,16 @@ class NNEDI3(SuperSampler, Deinterlacer):
     pscrn: int | None = None
     opencl: bool = False
 
-    def _deinterlacer_function(self, clip: vs.VideoNode, tff: bool, dh: bool, **kwargs: Any) -> ConstantFormatVideoNode:
+    def _deinterlacer_function(
+        self, clip: vs.VideoNode, tff: bool, dh: bool, **kwargs: Any
+    ) -> partial[ConstantFormatVideoNode]:
         field = int(tff) + (int(self.double_rate) * 2)
 
         func = core.lazy.sneedif.NNEDI3 if self.opencl else core.lazy.znedi3.nnedi3
 
-        return func(clip, field, dh, **self.get_deint_args(**kwargs))
+        return partial(func, clip, field, dh, **kwargs)
 
-    def get_deint_args(self, **kwargs: Any) -> dict[str, Any]:
+    def get_deint_args(self, clip: vs.VideoNode, dh: bool, **kwargs: Any) -> dict[str, Any]:
         return dict(
             nsize=self.nsize,
             nns=self.nns,
@@ -164,7 +176,9 @@ class EEDI2(SuperSampler, Deinterlacer):
     pp: int | None = None
     cuda: bool = False
 
-    def _deinterlacer_function(self, clip: vs.VideoNode, tff: bool, dh: bool, **kwargs: Any) -> ConstantFormatVideoNode:
+    def _deinterlacer_function(
+        self, clip: vs.VideoNode, tff: bool, dh: bool, **kwargs: Any
+    ) -> partial[ConstantFormatVideoNode]:
         field = int(tff)
 
         func = core.lazy.eedi2cuda.EEDI2 if self.cuda else core.lazy.eedi2.EEDI2
@@ -176,9 +190,9 @@ class EEDI2(SuperSampler, Deinterlacer):
             if not self.double_rate:
                 clip = clip[::2]
 
-        return func(clip, field, **self.get_deint_args(**kwargs))
+        return partial(func, clip, field, **kwargs)
 
-    def get_deint_args(self, **kwargs: Any) -> dict[str, Any]:
+    def get_deint_args(self, clip: vs.VideoNode, dh: bool, **kwargs: Any) -> dict[str, Any]:
         return dict(
             mthresh=self.mthresh,
             lthresh=self.lthresh,
@@ -212,29 +226,14 @@ class EEDI3(SuperSampler, Deinterlacer):
     mclip: vs.VideoNode | VSFunctionNoArgs[vs.VideoNode, ConstantFormatVideoNode] | None = None
     opencl: bool = False
 
-    def _deinterlacer_function(self, clip: vs.VideoNode, tff: bool, dh: bool, **kwargs: Any) -> ConstantFormatVideoNode:
+    def _deinterlacer_function(
+        self, clip: vs.VideoNode, tff: bool, dh: bool, **kwargs: Any
+    ) -> partial[ConstantFormatVideoNode]:
         field = int(tff) if dh else int(tff) + (int(self.double_rate) * 2)
-        mult = (0 if dh else int(self.double_rate)) + 1
 
-        func = getattr(core.eedi3m, 'EEDI3CL' if self.opencl else 'EEDI3')
+        func = core.lazy.eedi3m.EEDI3CL if self.opencl else core.lazy.eedi3m.EEDI3
 
-        kwargs = self.get_deint_args(**kwargs)
-
-        if callable(self.sclip):
-            kwargs.update(sclip=self.sclip(clip))
-
-        if callable(self.mclip):
-            kwargs.update(mclip=self.mclip(clip))
-
-        if sclip := kwargs.get('sclip'):
-            if sclip.num_frames * 2 == clip.num_frames * mult:
-                kwargs.update(sclip=core.std.Interleave([sclip] * 2))
-
-        if mclip := kwargs.get('mclip'):
-            if mclip.num_frames * 2 == clip.num_frames * mult:
-                kwargs.update(mclip=core.std.Interleave([mclip] * 2))
-
-        return func(clip, field, dh, **kwargs)
+        return partial(func, clip, field, dh, **kwargs)
 
     def transpose(self, clip: vs.VideoNode) -> ConstantFormatVideoNode:
         if isinstance(self.sclip, vs.VideoNode):
@@ -245,10 +244,10 @@ class EEDI3(SuperSampler, Deinterlacer):
 
         return super().transpose(clip)
 
-    def get_deint_args(self, **kwargs: Any) -> dict[str, Any]:
+    def get_deint_args(self, clip: vs.VideoNode, dh: bool, **kwargs: Any) -> dict[str, Any]:
         self.vthresh = normalize_seq(self.vthresh, 3)
 
-        return dict(
+        kwargs = dict(
             alpha=self.alpha,
             beta=self.beta,
             gamma=self.gamma,
@@ -265,6 +264,24 @@ class EEDI3(SuperSampler, Deinterlacer):
             mclip=self.mclip
         ) | kwargs
 
+        if callable(self.sclip):
+            kwargs.update(sclip=self.sclip(clip))
+
+        if callable(self.mclip):
+            kwargs.update(mclip=self.mclip(clip))
+
+        mult = (0 if dh else int(self.double_rate)) + 1
+
+        if sclip := kwargs.get('sclip'):
+            if sclip.num_frames * 2 == clip.num_frames * mult:
+                kwargs.update(sclip=core.std.Interleave([sclip] * 2))
+
+        if mclip := kwargs.get('mclip'):
+            if mclip.num_frames * 2 == clip.num_frames * mult:
+                kwargs.update(mclip=core.std.Interleave([mclip] * 2))
+
+        return kwargs
+
     @inject_self.cached.property
     def kernel_radius(self) -> int:
         return fallback(self.mdis, 20)
@@ -274,16 +291,18 @@ class EEDI3(SuperSampler, Deinterlacer):
 class SANGNOM(SuperSampler, Deinterlacer):
     aa: list[int | None] | None = None
 
-    def _deinterlacer_function(self, clip: vs.VideoNode, tff: bool, dh: bool, **kwargs: Any) -> ConstantFormatVideoNode:
+    def _deinterlacer_function(
+        self, clip: vs.VideoNode, tff: bool, dh: bool, **kwargs: Any
+    ) -> partial[ConstantFormatVideoNode]:
         if self.double_rate and not dh:
             order = 0
             clip = clip.std.SeparateFields(tff).std.DoubleWeave(tff)
         else:
             order = 1 if tff else 2
 
-        return core.sangnom.SangNom(clip, order, dh, **self.get_deint_args(**kwargs))
+        return partial(core.sangnom.SangNom, clip, order, dh, **kwargs)
 
-    def get_deint_args(self, **kwargs: Any) -> dict[str, Any]:
+    def get_deint_args(self, clip: vs.VideoNode, dh: bool, **kwargs: Any) -> dict[str, Any]:
         return dict(aa=self.aa) | kwargs
 
     _static_kernel_radius = 3
