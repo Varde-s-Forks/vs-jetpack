@@ -69,6 +69,7 @@ class Deinterlacer(ABC):
 
 
 class SuperSampler(Deinterlacer, Scaler, ABC):
+    # TODO: Change this when #94 is merged 
     @inject_self.cached
     def scale(
         self,
@@ -106,6 +107,7 @@ class SuperSampler(Deinterlacer, Scaler, ABC):
 
                 for y in range(clip.format.num_planes):
                     if not y:
+                        # TODO: Change this when #94 is merged 
                         nshift[x][y] = (nshift[x][y] + (-0.25 if tff else 0.25)) * 2
                     else:
                         nshift[x][y] = (nshift[x][y] + (-0.25 if tff else 0.25) * subsampling[x]) * 2 - cloc[x]
@@ -121,6 +123,7 @@ class SuperSampler(Deinterlacer, Scaler, ABC):
         if not self.transpose_first:
             nshift.reverse()
 
+        # TODO: Change this when #94 is merged 
         return clip.fmtc.resample(width, height, nshift[0], nshift[1])
 
 
@@ -151,6 +154,7 @@ class NNEDI3(SuperSampler, Deinterlacer):
             pscrn=self.pscrn
         ) | kwargs
 
+    # TODO: Change this when #94 is merged 
     @inject_self.cached.property
     def kernel_radius(self) -> int:
         match self.nsize:
@@ -206,6 +210,7 @@ class EEDI2(SuperSampler, Deinterlacer):
             pp=self.pp
         ) | kwargs
 
+    # TODO: Change this when #94 is merged 
     @inject_self.cached.property
     def kernel_radius(self) -> int:
         return fallback(self.maxd, 24)
@@ -283,6 +288,7 @@ class EEDI3(SuperSampler, Deinterlacer):
 
         return kwargs
 
+    # TODO: Change this when #94 is merged 
     @inject_self.cached.property
     def kernel_radius(self) -> int:
         return fallback(self.mdis, 20)
