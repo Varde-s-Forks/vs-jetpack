@@ -9,7 +9,8 @@ from typing_extensions import Self
 
 from vskernels import LeftShift, Scaler, TopShift
 from vstools import (
-    ChromaLocation, ConstantFormatVideoNode, VSFunctionNoArgs, check_variable, core, fallback, normalize_seq, vs
+    ChromaLocation, ConstantFormatVideoNode, VSFunctionNoArgs, check_variable, core, fallback, normalize_seq, vs,
+    vs_object
 )
 
 
@@ -20,7 +21,7 @@ class AADirection(IntFlag):
 
 
 @dataclass(kw_only=True)
-class Deinterlacer(ABC):
+class Deinterlacer(vs_object, ABC):
     tff: bool = False
     double_rate: bool = True
     transpose_first: bool = False
@@ -292,6 +293,10 @@ class EEDI3(SuperSampler, Deinterlacer):
     @inject_self.cached.property
     def kernel_radius(self) -> int:
         return fallback(self.mdis, 20)
+
+    def __vs_del__(self, core_id: int) -> None:
+        self.sclip = None
+        self.mclip = None
 
 
 @dataclass
