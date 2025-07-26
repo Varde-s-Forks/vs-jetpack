@@ -141,6 +141,7 @@ def _base_ensure_obj(
     cls: type[_BaseScalerT],
     value: str | type[BaseScaler] | BaseScaler | None,
     func_except: FuncExceptT | None,
+    cache: bool = False,
 ) -> _BaseScalerT:
     if value is None:
         return cls()
@@ -148,7 +149,16 @@ def _base_ensure_obj(
     if isinstance(value, cls):
         return value
 
+    if cache:
+        try:
+            return _cache_base_scaler[cls]  # type: ignore[return-value]
+        except KeyError:
+            return _cache_base_scaler.setdefault(cls, cls.from_param(value, func_except)())  # type: ignore[arg-type,return-value]
+
     return cls.from_param(value, func_except)()  # type: ignore[arg-type]
+
+
+_cache_base_scaler = dict[type["BaseScaler"], "BaseScaler"]()
 
 
 @functools.cache
@@ -374,6 +384,8 @@ class BaseScaler(vs_object, ABC, metaclass=BaseScalerMeta, abstract=True):
         scaler: str | type[Self] | Self | None = None,
         /,
         func_except: FuncExceptT | None = None,
+        *,
+        cache: bool = False,
     ) -> Self:
         """
         Ensure that the input is a scaler instance, resolving it if necessary.
@@ -385,7 +397,7 @@ class BaseScaler(vs_object, ABC, metaclass=BaseScalerMeta, abstract=True):
         Returns:
             Scaler instance.
         """
-        return _base_ensure_obj(cls, scaler, func_except)
+        return _base_ensure_obj(cls, scaler, func_except, cache)
 
     if TYPE_CHECKING:
 
@@ -904,7 +916,9 @@ class Kernel(Scaler, Descaler, Resampler):
         return _base_from_param(cls, kernel, cls._err_class, func_except)
 
     @classmethod
-    def ensure_obj(cls, kernel: KernelLike | None = None, /, func_except: FuncExceptT | None = None) -> Self:
+    def ensure_obj(
+        cls, kernel: KernelLike | None = None, /, func_except: FuncExceptT | None = None, *, cache: bool = False
+    ) -> Self:
         """
         Ensure that the given kernel input is returned as a kernel instance.
 
@@ -915,7 +929,7 @@ class Kernel(Scaler, Descaler, Resampler):
         Returns:
             The resolved and instantiated kernel.
         """
-        return _base_ensure_obj(cls, kernel, func_except)
+        return _base_ensure_obj(cls, kernel, func_except, cache)
 
     def get_params_args(
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
