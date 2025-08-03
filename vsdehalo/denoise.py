@@ -105,7 +105,8 @@ def hq_dering(
                - 0 means no contra
                - float: represents level for [contrasharpening_dehalo][vsdehalo.contrasharpening_dehalo]
 
-        drrep: Use repair for details retention, recommended values are 24/23/13/12/1. (Reference)
+        drrep: Use repair for details retention, recommended values are 24/23/13/12/1.
+            See the [repair modes][vsrgtools.rgtools.Repair.Mode] for more information.
 
         planes: Planes to be processed.
 
