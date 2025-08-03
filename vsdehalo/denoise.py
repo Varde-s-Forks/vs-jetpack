@@ -5,7 +5,9 @@ This modules implements dehaho functions based on spatial denoising operations.
 from __future__ import annotations
 
 from math import ceil, log
-from typing import Any, Sequence
+from typing import Any, Sequence, TypedDict
+
+from typing_extensions import Unpack
 
 from vsaa import NNEDI3
 from vsdenoise import Prefilter, PrefilterLike, frequency_merge, nl_means
@@ -33,6 +35,13 @@ from vstools import (
 __all__ = ["hq_dering", "smooth_dering", "vine_dehalo"]
 
 
+class _LimitFilterKwargs(TypedDict, total=False):
+    ref: vs.VideoNode | None
+    dark_thr: float | Sequence[float]
+    bright_thr: float | Sequence[float]
+    elast: float | Sequence[float]
+
+
 def hq_dering(
     clip: vs.VideoNode,
     smooth: vs.VideoNode | PrefilterLike = Prefilter.MINBLUR,
@@ -45,7 +54,7 @@ def hq_dering(
     contra: float = 1.4,
     drrep: int = 24,
     planes: PlanesT = 0,
-    **kwargs: Any,
+    **kwargs: Unpack[_LimitFilterKwargs],
 ) -> vs.VideoNode:
     """
     Applies deringing by using a smart smoother near edges (where ringing occurs) only.
@@ -96,9 +105,12 @@ def hq_dering(
                - 0 means no contra
                - float: represents level for [contrasharpening_dehalo][vsdehalo.contrasharpening_dehalo]
 
-        drrep: Use repair for details retention, recommended values are 24/23/13/12/1.
+        drrep: Use repair for details retention, recommended values are 24/23/13/12/1. (Reference)
 
         planes: Planes to be processed.
+
+        **kwargs: Additional arguments passed to [limit_filter][vsrgtools.limit_filter].
+            If not specified `dark_thr` is set to 12 and `bright_thr` to `dark_thr / 4`
 
     Returns:
         Deringed clip.
@@ -116,7 +128,13 @@ def hq_dering(
         smoothed = contrasharpening_dehalo(smoothed, func.work_clip, contra, planes=planes)
 
     repaired = repair(func.work_clip, smoothed, drrep, planes)
-    limited = limit_filter(repaired, func.work_clip, None, planes=planes, **kwargs)
+
+    if "dark_thr" not in kwargs:
+        kwargs["dark_thr"] = 12
+    if "bright_thr" not in kwargs:
+        kwargs["bright_thr"] = [t / 4 for t in to_arr(kwargs["dark_thr"])]
+
+    limited = limit_filter(repaired, func.work_clip, planes=planes, **kwargs)
 
     if ringmask is None:
         edgemask = PrewittStd.edgemask(func.work_clip, scale_mask(mthr, 8, 32), planes=planes)
