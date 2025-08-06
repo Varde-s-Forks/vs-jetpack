@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 from types import NoneType
-from typing import Any, Callable, Generic, Literal, Protocol, Sequence, TypedDict, TypeVar, overload
+from typing import Any, Callable, Generic, Literal, Protocol, Sequence, TypeVar, overload
 
-from jetpytools import CustomValueError, P, R, to_arr
+from jetpytools import CustomValueError, P, R, fallback, to_arr
 from typing_extensions import Unpack
 
 from vsdenoise import PrefilterLike
 from vsexprtools import norm_expr
 from vsrgtools import gauss_blur, limit_filter
+from vsrgtools.limit import _LimitFilterKwargs
 from vstools import (
     ConstantFormatVideoNode,
     CustomIntEnum,
@@ -542,20 +543,15 @@ class _DebanderFunc(Protocol[_Nb]):
     ) -> vs.VideoNode: ...
 
 
-class _LimitFilterKwargs(TypedDict, total=False):
-    ref: vs.VideoNode | None
-    dark_thr: float | Sequence[float]
-    bright_thr: float | Sequence[float]
-    elast: float | Sequence[float]
-
-
 def mdb_bilateral(
     clip: vs.VideoNode,
     radius: int = 16,
     thr: float = 260,
     debander: _DebanderFunc[Any] = f3k_deband,
+    dark_thr: float | Sequence[float] = (0.6, 0),
+    bright_thr: float | Sequence[float] = (0.6, 0),
+    elast: float | Sequence[float] = 3.0,
     planes: PlanesT = None,
-    **kwargs: Unpack[_LimitFilterKwargs],
 ) -> vs.VideoNode:
     """
     Multi stage debanding, bilateral-esque filter.
@@ -575,9 +571,13 @@ def mdb_bilateral(
         radius: Banding detection range.
         thr: Banding detection thr(s) for planes.
         debander: Specifies what debander callable to use.
+        dark_thr: [limit_filter][vsrgtools.limit_filter] parameter.
+            Threshold (8-bit scale) to limit dark filtering diff.
+        bright_thr: [limit_filter][vsrgtools.limit_filter] parameter.
+            Threshold (8-bit scale) to limit bright filtering diff.
+        elast: [limit_filter][vsrgtools.limit_filter] parameter.
+            Elasticity of the soft threshold.
         planes: Which planes to process.
-        **kwargs: Additional arguments passed to [limit_filter][vsrgtools.limit_filter].
-            If not specified `ref` is set to the input clip, `dark_thr` and `bright_thr` to 153, and elast to 3.0.
 
     Returns:
         Debanded clip.
@@ -592,12 +592,7 @@ def mdb_bilateral(
     db2 = debander(db1, rad2, thr, 0, planes)
     db3 = debander(db2, rad3, thr, 0, planes)
 
-    limit = limit_filter(
-        db3,
-        db2,
-        planes=planes,
-        **_LimitFilterKwargs(ref=clip, dark_thr=(0.6, 0), bright_thr=(0.6, 0), elast=3.0) | kwargs,
-    )
+    limit = limit_filter(db3, clip, db1, dark_thr, bright_thr, elast, planes)
 
     return depth(limit, bits)
 
