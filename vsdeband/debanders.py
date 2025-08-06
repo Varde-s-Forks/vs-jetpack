@@ -596,7 +596,7 @@ def mdb_bilateral(
         db3,
         db2,
         planes=planes,
-        **_LimitFilterKwargs(ref=clip, dark_thr=[153, 0], bright_thr=[153, 0], elast=3.0) | kwargs,
+        **_LimitFilterKwargs(ref=clip, dark_thr=(0.6, 0), bright_thr=(0.6, 0), elast=3.0) | kwargs,
     )
 
     return depth(limit, bits)
@@ -645,7 +645,7 @@ def pfdeband(
         merge,
         clip,
         planes=planes,
-        **_LimitFilterKwargs(dark_thr=0.5, bright_thr=0.5, elast=1.5) | kwargs,
+        **_LimitFilterKwargs(dark_thr=0.3, bright_thr=0.3, elast=2.5) | kwargs,
     )
 
     return depth(limit, bits)
