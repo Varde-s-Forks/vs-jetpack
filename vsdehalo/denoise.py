@@ -5,9 +5,9 @@ This modules implements dehaho functions based on spatial denoising operations.
 from __future__ import annotations
 
 from math import ceil, log
-from typing import Any, Sequence, TypedDict
+from typing import Any, Sequence
 
-from typing_extensions import Unpack
+from jetpytools import fallback, to_arr
 
 from vsaa import NNEDI3
 from vsdenoise import Prefilter, PrefilterLike, frequency_merge, nl_means
@@ -28,18 +28,10 @@ from vstools import (
     check_ref_clip,
     core,
     scale_mask,
-    to_arr,
     vs,
 )
 
 __all__ = ["hq_dering", "smooth_dering", "vine_dehalo"]
-
-
-class _LimitFilterKwargs(TypedDict, total=False):
-    ref: vs.VideoNode | None
-    dark_thr: float | Sequence[float]
-    bright_thr: float | Sequence[float]
-    elast: float | Sequence[float]
 
 
 def hq_dering(
@@ -53,8 +45,11 @@ def hq_dering(
     incedge: bool = False,
     contra: float = 1.4,
     drrep: int = 24,
+    ref: vs.VideoNode | None = None,
+    dark_thr: float | Sequence[float] = 12,
+    bright_thr: float | Sequence[float] | None = None,
+    elast: float | Sequence[float] = 2,
     planes: PlanesT = 0,
-    **kwargs: Unpack[_LimitFilterKwargs],
 ) -> vs.VideoNode:
     """
     Applies deringing by using a smart smoother near edges (where ringing occurs) only.
@@ -85,33 +80,33 @@ def hq_dering(
 
     Args:
         clip: Clip to process.
-
         smooth: Already smoothed clip, or a Prefilter.
-
         ringmask: Custom ringing mask.
-
         mrad: Expanding iterations of edge mask, higher value means more aggressive processing.
-
         msmooth: Inflating iterations of edge mask, higher value means smoother edges of mask.
-
         minp: Inpanding iterations of the edge mask, higher value means more aggressive processing.
-
         mthr: Threshold of the edge mask, lower value means more aggressive processing but for strong ringing, lower
             value will treat some ringing as edge, which "protects" this ringing from being processed.
-
         incedge: Whether to include edge in ring mask, by default ring mask only include area near edges.
-
         contra: Whether to use contra-sharpening to resharp deringed clip:
+
                - 0 means no contra
                - float: represents level for [contrasharpening_dehalo][vsdehalo.contrasharpening_dehalo]
 
         drrep: Use repair for details retention, recommended values are 24/23/13/12/1.
             See the [repair modes][vsrgtools.rgtools.Repair.Mode] for more information.
-
         planes: Planes to be processed.
-
-        **kwargs: Additional arguments passed to [limit_filter][vsrgtools.limit_filter].
-            If not specified `dark_thr` is set to 12 and `bright_thr` to `dark_thr / 4`
+        ref: [limit_filter][vsrgtools.limit_filter] parameter.
+            Reference clip, to compute the weight to be applied on filtering diff.
+        dark_thr: [limit_filter][vsrgtools.limit_filter] parameter.
+            Threshold (8-bit scale) to limit dark filtering diff.
+            Since `dark_thr` is "how much to limit undershoot", increasing this threshold
+            will effectively remove more light halos.
+        bright_thr: [limit_filter][vsrgtools.limit_filter] parameter.
+            Threshold (8-bit scale) to limit bright filtering diff.
+            Since `bright_thr` is "how much to limit overshoot", increasing this threshold
+            will effectively remove more dark halos.
+        elast: [limit_filter][vsrgtools.limit_filter] parameter. Elasticity of the soft threshold.
 
     Returns:
         Deringed clip.
@@ -130,12 +125,15 @@ def hq_dering(
 
     repaired = repair(func.work_clip, smoothed, drrep, planes)
 
-    if "dark_thr" not in kwargs:
-        kwargs["dark_thr"] = 12
-    if "bright_thr" not in kwargs:
-        kwargs["bright_thr"] = [t / 4 for t in to_arr(kwargs["dark_thr"])]
-
-    limited = limit_filter(repaired, func.work_clip, planes=planes, **kwargs)
+    limited = limit_filter(
+        repaired,
+        func.work_clip,
+        ref,
+        dark_thr,
+        fallback(bright_thr, [t / 4 for t in to_arr(dark_thr)]),  # type: ignore[arg-type]
+        elast,
+        planes,
+    )
 
     if ringmask is None:
         edgemask = PrewittStd.edgemask(func.work_clip, scale_mask(mthr, 8, 32), planes=planes)
