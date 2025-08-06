@@ -4,12 +4,10 @@ from types import NoneType
 from typing import Any, Callable, Generic, Literal, Protocol, Sequence, TypeVar, overload
 
 from jetpytools import CustomValueError, P, R, fallback, to_arr
-from typing_extensions import Unpack
 
 from vsdenoise import PrefilterLike
 from vsexprtools import norm_expr
 from vsrgtools import gauss_blur, limit_filter
-from vsrgtools.limit import _LimitFilterKwargs
 from vstools import (
     ConstantFormatVideoNode,
     CustomIntEnum,
@@ -611,8 +609,11 @@ def pfdeband(
     thr: float | Sequence[float] = 96,
     prefilter: PrefilterLike | _SupportPlanesParam = gauss_blur,
     debander: _DebanderFunc[Any] = f3k_deband,
+    ref: vs.VideoNode | None = None,
+    dark_thr: float | Sequence[float] = 0.3,
+    bright_thr: float | Sequence[float] = 0.3,
+    elast: float | Sequence[float] = 2.5,
     planes: PlanesT = None,
-    **kwargs: Unpack[_LimitFilterKwargs],
 ) -> vs.VideoNode:
     """
     Prefilter and deband a clip.
@@ -624,8 +625,14 @@ def pfdeband(
         prefilter: Prefilter used to blur the clip before debanding.
         debander: Specifies what debander callable to use.
         planes: Planes to process
-        **kwargs: Additional arguments passed to [limit_filter][vsrgtools.limit_filter].
-            If not specified `dark_thr` and `bright_thr` are set to 0.5, and elast to 1.5.
+        ref: [limit_filter][vsrgtools.limit_filter] parameter.
+            Reference clip, to compute the weight to be applied on filtering diff.
+        dark_thr: [limit_filter][vsrgtools.limit_filter] parameter.
+            Threshold (8-bit scale) to limit dark filtering diff.
+        bright_thr: [limit_filter][vsrgtools.limit_filter] parameter.
+            Threshold (8-bit scale) to limit bright filtering diff.
+        elast: [limit_filter][vsrgtools.limit_filter] parameter.
+            Elasticity of the soft threshold.
 
     Returns:
         Debanded clip.
@@ -636,11 +643,6 @@ def pfdeband(
 
     merge = norm_expr([clip, blur, debander(blur, radius, thr, planes=planes)], "z x y - +", planes, func=pfdeband)
 
-    limit = limit_filter(
-        merge,
-        clip,
-        planes=planes,
-        **_LimitFilterKwargs(dark_thr=0.3, bright_thr=0.3, elast=2.5) | kwargs,
-    )
+    limit = limit_filter(merge, clip, ref, dark_thr, bright_thr, elast, planes)
 
     return depth(limit, bits)
