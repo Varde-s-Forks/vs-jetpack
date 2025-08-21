@@ -425,7 +425,7 @@ class NNEDI3(SuperSampler):
             "pscrn": self.pscrn,
         } | kwargs
 
-    @Scaler.cached_property
+    @Scaler.cachedproperty
     def kernel_radius(self) -> int:
         match self.nsize:
             case 0 | 4:
@@ -546,7 +546,7 @@ class EEDI2(SuperSampler):
             "pp": self.pp,
         } | kwargs
 
-    @Scaler.cached_property
+    @Scaler.cachedproperty
     def kernel_radius(self) -> int:
         return self.maxd
 
@@ -737,7 +737,7 @@ class EEDI3(SuperSampler):
 
         return eedi3_kwargs | kwargs
 
-    @Scaler.cached_property
+    @Scaler.cachedproperty
     def kernel_radius(self) -> int:
         return self.mdis
 

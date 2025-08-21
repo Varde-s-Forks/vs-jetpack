@@ -7,7 +7,6 @@ from __future__ import annotations
 from abc import ABC, ABCMeta
 from contextlib import suppress
 from functools import cache, wraps
-from functools import cached_property as functools_cached_property
 from inspect import Signature
 from math import ceil
 from types import NoneType
@@ -25,7 +24,8 @@ from typing import (
     overload,
 )
 
-from jetpytools import P, R, T_co, classproperty
+from jetpytools import P, R, R_co, classproperty
+from jetpytools import cachedproperty as jetpytools_cachedproperty
 from typing_extensions import Self, deprecated
 
 from vstools import (
@@ -201,20 +201,22 @@ class BaseScalerMeta(ABCMeta):
       still allowed to be instantiated. It is added to ``partial_abstract_kernels``.
     """
 
-    class cached_property(functools_cached_property[T_co]):  # noqa: N801
+    class cachedproperty(jetpytools_cachedproperty[R_co]):  # noqa: N801
         """
-        Read only version of functools.cached_property.
+        Read only version of jetpytools.cachedproperty.
         """
 
         if TYPE_CHECKING:
 
-            def __init__(self, func: Callable[Concatenate[_BaseScalerT, P], T_co]) -> None: ...
+            def __init__(self, func: Callable[Concatenate[_BaseScalerT, P], R_co]) -> None: ...
 
-        def __set__(self, instance: None, value: Any) -> NoReturn:  # type: ignore[override]
+        def __set__(self, instance: None, value: Any) -> NoReturn:
             """
             Raise an error when attempting to set a cached property.
             """
             raise AttributeError("Can't set attribute")
+
+    cached_property = cachedproperty
 
     def __new__(
         mcls: type[_BaseScalerMetaT],
@@ -264,18 +266,14 @@ class BaseScalerMeta(ABCMeta):
         return obj
 
 
-@BaseScalerMeta.cached_property
+@BaseScalerMeta.cachedproperty
 def _partial_abstract_kernel_radius(self: BaseScaler) -> int:
     raise CustomNotImplementedError("kernel_radius is not implemented!", self.__class__)
 
 
-@BaseScalerMeta.cached_property
+@BaseScalerMeta.cachedproperty
 def _static_kernel_radius_property(self: BaseScaler) -> int:
     return ceil(self._static_kernel_radius)
-
-
-_partial_abstract_kernel_radius.attrname = "kernel_radius"
-_static_kernel_radius_property.attrname = "kernel_radius"
 
 
 _BaseScalerMetaT = TypeVar("_BaseScalerMetaT", bound=BaseScalerMeta)
@@ -393,7 +391,7 @@ class BaseScaler(vs_object, ABC, metaclass=BaseScalerMeta, abstract=True):
 
     if TYPE_CHECKING:
 
-        @BaseScalerMeta.cached_property
+        @BaseScalerMeta.cachedproperty
         def kernel_radius(self) -> int:
             """
             Return the effective kernel radius for the scaler.
@@ -420,7 +418,7 @@ class BaseScaler(vs_object, ABC, metaclass=BaseScalerMeta, abstract=True):
             f"{self.__class__.__name__}" + "(" + ", ".join(f"{k}={v}" for k, v in (attrs | self.kwargs).items()) + ")"
         )
 
-    @BaseScalerMeta.cached_property
+    @BaseScalerMeta.cachedproperty
     def pretty_string(self) -> str:
         """
         Cached property returning a user-friendly string representation.

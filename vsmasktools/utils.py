@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from functools import cached_property
 from typing import Any, Callable, Concatenate, Generic, Iterable, overload
 
-from jetpytools import P, R, SupportsString
+from jetpytools import P, R, SupportsString, cachedproperty
 
 from vsexprtools import ExprOp, norm_expr
 from vskernels import Bilinear, Kernel, KernelLike
@@ -75,7 +74,7 @@ class RegionMask(Generic[P, R]):
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         return self._func(*args, **kwargs)
 
-    @cached_property
+    @cachedproperty
     def expr(self) -> str:
         """
         Get the internal expr used for regioning.

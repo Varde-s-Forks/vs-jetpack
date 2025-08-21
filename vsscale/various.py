@@ -157,7 +157,7 @@ class ClampScaler(GenericScaler):
 
         return merged
 
-    @Scaler.cached_property
+    @Scaler.cachedproperty
     def kernel_radius(self) -> int:
         if not isinstance(self.reference, vs.VideoNode):
             return max(self.reference.kernel_radius, self.base_scaler.kernel_radius)

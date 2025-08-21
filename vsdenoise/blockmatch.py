@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from functools import cache, cached_property
+from functools import cache
 from inspect import signature
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Callable, Generic, Sequence, cast
@@ -13,6 +13,7 @@ from jetpytools import (
     KwargsT,
     P,
     R,
+    cachedproperty,
     fallback,
     interleave_arr,
     normalize_seq,
@@ -275,7 +276,7 @@ class BM3D(Generic[P, R]):
         A profile tailored for handling very noisy content.
         """
 
-        @cached_property
+        @cachedproperty
         def config(self) -> MappingProxyType[str, MappingProxyType[str, MappingProxyType[str, Any]]]:
             """
             Retrieves the configuration for each BM3D profile.

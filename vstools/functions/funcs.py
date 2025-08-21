@@ -30,7 +30,7 @@ from .utils import depth, join, plane
 __all__ = ["FunctionUtil", "fallback", "iterate", "kwargs_fallback"]
 
 
-class FunctionUtil(cachedproperty.baseclass, list[int], vs_object):
+class FunctionUtil(list[int], vs_object):
     """
     Function util to normalize common actions and boilerplate often used in functions.
 
@@ -373,3 +373,4 @@ class FunctionUtil(cachedproperty.baseclass, list[int], vs_object):
 
     def __vs_del__(self, core_id: int) -> None:
         del self.clip, self.func, self.allowed_cfamilies
+        cachedproperty.clear_cache(self)

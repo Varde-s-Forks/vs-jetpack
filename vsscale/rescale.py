@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from abc import ABC
 from contextlib import suppress
-from functools import cached_property, wraps
+from functools import wraps
 from typing import Any, Callable, Sequence, TypeVar
+
+from jetpytools import cachedproperty
 
 from vsexprtools import ExprToken, norm_expr
 from vskernels import Bilinear, BorderHandling, Hermite, Kernel, KernelLike, Scaler, ScalerLike
@@ -165,28 +167,28 @@ class RescaleBase(vs_object, ABC):
             clip, self._clipy.width, self._clipy.height, **self.descale_args.kwargs(clip)
         )
 
-    @cached_property
+    @cachedproperty
     def descale(self) -> ConstantFormatVideoNode:
         """
         Gets the descaled clip.
         """
         return self._generate_descale(self._clipy)
 
-    @cached_property
+    @cachedproperty
     def rescale(self) -> ConstantFormatVideoNode:
         """
         Gets the rescaled clip.
         """
         return self._generate_rescale(self.descale)
 
-    @cached_property
+    @cachedproperty
     def doubled(self) -> ConstantFormatVideoNode:
         """
         Gets the doubled clip.
         """
         return self._generate_doubled(self.descale)
 
-    @cached_property
+    @cachedproperty
     def upscale(self) -> ConstantFormatVideoNode:
         """
         Returns the upscaled clip
@@ -198,10 +200,7 @@ class RescaleBase(vs_object, ABC):
     def __vs_del__(self, core_id: int) -> None:
         del self._clipy
         del self._chroma
-        del self.descale
-        del self.rescale
-        del self.doubled
-        del self.upscale
+        cachedproperty.clear_cache(self)
 
 
 class Rescale(RescaleBase):

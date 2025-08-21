@@ -103,7 +103,7 @@ class Placebo(ComplexScaler, abstract=True):
             | {"linearize": False, "sigmoidize": False}
         )
 
-    @ComplexScaler.cached_property
+    @ComplexScaler.cachedproperty
     def kernel_radius(self) -> int:
         if self.radius:
             return ceil(self.radius)

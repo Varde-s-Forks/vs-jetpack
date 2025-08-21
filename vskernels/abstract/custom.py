@@ -133,7 +133,7 @@ class CustomComplexTapsKernel(CustomComplexKernel):
         self.taps = taps
         super().__init__(**kwargs)
 
-    @Kernel.cached_property
+    @Kernel.cachedproperty
     def kernel_radius(self) -> int:
         """
         Compute the effective kernel radius based on the number of taps.

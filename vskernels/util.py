@@ -343,7 +343,7 @@ class MixedScalerProcess(BaseMixedScaler[_ScalerT, Unpack[_BaseScalerTs]], Scale
 
 
 @dataclass
-class LinearLightProcessing(cachedproperty.baseclass, vs_object):
+class LinearLightProcessing(vs_object):
     ll: LinearLight
 
     def get_linear(self) -> vs.VideoNode:
@@ -381,7 +381,7 @@ class LinearLightProcessing(cachedproperty.baseclass, vs_object):
             )
         self._linear = processed
 
-    linear = cachedproperty[[Self], vs.VideoNode, Self, vs.VideoNode, ...](get_linear, set_linear)
+    linear = cachedproperty[vs.VideoNode](get_linear, set_linear)
     """
     Cached property to use for linear light processing.
     """
@@ -415,8 +415,7 @@ class LinearLightProcessing(cachedproperty.baseclass, vs_object):
 
     def __vs_del__(self, core_id: int) -> None:
         del self._linear
-        del self.__dict__[cachedproperty.cache_key]["get_linear"]
-        del self.__dict__[cachedproperty.cache_key]["out"]
+        cachedproperty.clear_cache(self)
 
 
 @dataclass
