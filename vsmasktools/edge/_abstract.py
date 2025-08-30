@@ -7,10 +7,9 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from enum import IntFlag, auto
 from inspect import isabstract
-from typing import TYPE_CHECKING, Any, ClassVar, Sequence, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, Self, Sequence, TypeAlias, TypeVar
 
 from jetpytools import inject_kwargs_params, to_arr
-from typing_extensions import Self
 
 from vsexprtools import ExprList, ExprOp, norm_expr
 from vstools import (
