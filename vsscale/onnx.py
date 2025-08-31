@@ -17,8 +17,6 @@ from typing import (
     Protocol,
     Self,
     SupportsFloat,
-    TypeAlias,
-    TypeVar,
     get_args,
     runtime_checkable,
 )
@@ -64,9 +62,6 @@ __all__ = [
     "Waifu2x",
     "autoselect_backend",
 ]
-
-
-_IntT = TypeVar("_IntT", bound=int)
 
 
 @runtime_checkable
@@ -459,7 +454,7 @@ class BaseOnnxScaler(BaseGenericScaler, ABC):
 
         return inference(clip, self.model, overlaps, tilesize, self.backend, **kwargs)
 
-    def _pick_precision(self, fp16: _IntT, fp32: _IntT) -> _IntT:
+    def _pick_precision[_IntT: int](self, fp16: _IntT, fp32: _IntT) -> _IntT:
         from vsmlrt import Backend
 
         precision = (
@@ -1300,8 +1295,8 @@ class Waifu2x(_Waifu2xCunet):
         _model = 10
 
 
-_DPIRGrayModel: TypeAlias = int
-_DPIRColorModel: TypeAlias = int
+type _DPIRGrayModel = int
+type _DPIRColorModel = int
 
 
 class BaseDPIR(BaseOnnxScaler):

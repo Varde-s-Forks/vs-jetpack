@@ -7,7 +7,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from enum import IntFlag, auto
 from inspect import isabstract
-from typing import TYPE_CHECKING, Any, ClassVar, Self, Sequence, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, Self, Sequence
 
 from jetpytools import inject_kwargs_params, to_arr
 
@@ -17,7 +17,6 @@ from vstools import (
     ConvMode,
     FuncExcept,
     Planes,
-    T,
     check_variable,
     core,
     depth,
@@ -91,7 +90,7 @@ class MagDirection(IntFlag):
     SOUTH = S | SW | SE
     """All southern directions (South, Southwest, Southeast)."""
 
-    def select_matrices(self, matrices: Sequence[T]) -> Sequence[T]:
+    def select_matrices[T](self, matrices: Sequence[T]) -> Sequence[T]:
         """
         Return matrices matching the active directions in `self`.
 
@@ -109,12 +108,12 @@ class MagDirection(IntFlag):
         return [matrix for flag, matrix in zip(primary_flags, matrices) if self & flag]
 
 
-def _base_from_param(
-    cls: type[EdgeDetectTypeVar],
-    value: str | type[EdgeDetectTypeVar] | EdgeDetectTypeVar | None,
+def _base_from_param[_EdgeDetectT: EdgeDetect](
+    cls: type[_EdgeDetectT],
+    value: str | type[_EdgeDetectT] | _EdgeDetectT | None,
     exception_cls: type[_UnknownMaskDetectError],
     func_except: FuncExcept | None = None,
-) -> type[EdgeDetectTypeVar]:
+) -> type[_EdgeDetectT]:
     # If value is an instance returns the class
     if isinstance(value, cls):
         return value.__class__
@@ -138,11 +137,11 @@ def _base_from_param(
     raise exception_cls(func_except or cls.from_param, str(value))
 
 
-def _base_ensure_obj(
-    cls: type[EdgeDetectTypeVar],
-    value: str | type[EdgeDetectTypeVar] | EdgeDetectTypeVar | None,
+def _base_ensure_obj[_EdgeDetectT: EdgeDetect](
+    cls: type[_EdgeDetectT],
+    value: str | type[_EdgeDetectT] | _EdgeDetectT | None,
     func_except: FuncExcept | None = None,
-) -> EdgeDetectTypeVar:
+) -> _EdgeDetectT:
     if isinstance(value, cls):
         return value
 
@@ -691,7 +690,7 @@ class RidgeDetect(MatrixEdgeDetect):
         return self._depth_scale(super()._postprocess(clip, input_bits), input_bits)
 
 
-EdgeDetectLike: TypeAlias = type[EdgeDetect] | EdgeDetect | str
+type EdgeDetectLike = type[EdgeDetect] | EdgeDetect | str
 """
 Type alias for anything that can resolve to a EdgeDetect.
 
@@ -701,7 +700,7 @@ This includes:
  - An instance of a `EdgeDetect`.
 """
 
-RidgeDetectLike: TypeAlias = type[RidgeDetect] | RidgeDetect | str
+type RidgeDetectLike = type[RidgeDetect] | RidgeDetect | str
 """
 Type alias for anything that can resolve to a RidgeDetect.
 
@@ -716,9 +715,6 @@ EdgeDetectT = EdgeDetectLike
 
 RidgeDetectT = RidgeDetectLike
 """Deprecated alias of RidgeDetectLike."""
-
-EdgeDetectTypeVar = TypeVar("EdgeDetectTypeVar", bound=EdgeDetect)
-RidgeDetectTypeVar = TypeVar("RidgeDetectTypeVar", bound=RidgeDetect)
 
 
 def get_all_edge_detects(
