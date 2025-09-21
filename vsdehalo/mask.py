@@ -4,10 +4,9 @@ This module implements dehalo functions with complex masking abilities.
 
 from __future__ import annotations
 
-from contextlib import suppress
 from typing import Any, Callable, Iterator, Mapping, Sequence
 
-from jetpytools import CustomIndexError, normalize_seq, FuncExcept
+from jetpytools import CustomIndexError, FuncExcept, normalize_seq
 
 from vsaa import NNEDI3, SuperSamplerProcess
 from vsdenoise import Prefilter
@@ -30,7 +29,7 @@ from vstools import (
     OneDimConvMode,
     Planes,
     VSFunctionPlanesArgs,
-    VSObject,
+    VSObjectABC,
     check_progressive,
     get_y,
     join,
@@ -106,7 +105,7 @@ class FineDehalo[**P, R]:
         """
         return self.Masks(clip, rx, ry, edgemask, thmi, thma, thlimi, thlima, exclude, edgeproc, planes, func).MAIN
 
-    class Masks(Mapping[str, vs.VideoNode], VSObject):
+    class Masks(Mapping[str, vs.VideoNode], VSObjectABC):
         """
         Class for creating and storing intermediate masks used in the `fine_dehalo` function.
 
@@ -290,11 +289,6 @@ class FineDehalo[**P, R]:
         @property
         def MAIN(self) -> vs.VideoNode:  # noqa: N802
             return self._main
-
-        def __vs_del__(self, core_id: int) -> None:
-            for name in ["_edges", "_strong", "_large", "_light", "_shrink", "_shr_med", "_main"]:
-                with suppress(AttributeError):
-                    delattr(self, name)
 
 
 @FineDehalo

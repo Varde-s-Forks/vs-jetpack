@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Callable, Sequence, SupportsIndex, overload
 
 from jetpytools import CustomValueError, to_arr
 
-from vstools import VSObject, get_prop, set_output, vs
+from vstools import VSObjectABC, get_prop, set_output, vs
 
 from .utils import AC3_FRAME_LENGTH, PCR_CLOCK, absolute_time_from_timecode
 
@@ -65,7 +65,7 @@ class SplitTitle:
         return "\n".join(to_print)
 
 
-class TitleAudios(Sequence[vs.AudioNode], VSObject):
+class TitleAudios(Sequence[vs.AudioNode], VSObjectABC):
     def __init__(self, title: Title) -> None:
         self.title = title
 
@@ -116,9 +116,6 @@ class TitleAudios(Sequence[vs.AudioNode], VSObject):
 
     def __len__(self) -> int:
         return len(self.cache)
-
-    def __vs_del__(self, core_id: int) -> None:
-        self.cache.clear()
 
 
 @dataclass
