@@ -16,7 +16,6 @@ from vstools import (
     ColorRange,
     ConvMode,
     Planes,
-    check_variable,
     core,
     depth,
     get_peak_value,
@@ -193,8 +192,6 @@ class EdgeDetect(ABC):
         Returns:
             Mask clip
         """
-        assert check_variable(clip, self.__class__)
-
         clip_p = self._preprocess(clip, **kwargs)
 
         mask = self._compute_edge_mask(clip_p, multi=multi, planes=planes, **kwargs)
@@ -205,8 +202,6 @@ class EdgeDetect(ABC):
 
     @classmethod
     def _depth_scale(cls, clip: vs.VideoNode, bitdepth: vs.VideoNode) -> vs.VideoNode:
-        assert check_variable(clip, cls)
-
         fmt = get_video_format(bitdepth)
 
         if fmt.sample_type == vs.INTEGER:
@@ -621,9 +616,6 @@ class RidgeDetect(MatrixEdgeDetect):
         Returns:
             Mask clip
         """
-
-        assert check_variable(clip, self.__class__)
-
         clip_p = self._preprocess_ridge(clip)
 
         mask = self._compute_ridge_mask(clip_p, multi=multi, planes=planes, **kwargs)

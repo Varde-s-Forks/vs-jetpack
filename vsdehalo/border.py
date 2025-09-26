@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, SupportsIndex, TypeAlias, TypeIs
 from jetpytools import CustomOverflowError, CustomTypeError, FuncExcept, normalize_seq
 
 from vsexprtools import ExprList, ExprOp, ExprToken, norm_expr
-from vstools import check_variable_format, get_lowest_values, get_peak_values, get_resolutions, vs, vs_object
+from vstools import get_lowest_values, get_peak_values, get_resolutions, vs, vs_object
 
 if TYPE_CHECKING:
     NoneSlice: TypeAlias = slice[None, None, None] | None
@@ -79,7 +79,6 @@ class FixBorderBrightness(vs_object):
                    - If a tuple `(low, high)` is given, applies it as a protection range.
                    - If a list of tuples is provided, applies individual protection ranges per plane.
         """
-        assert check_variable_format(clip, self.__class__)
         self.clip = clip
 
         ws, hs = zip(*((w, h) for _, w, h in get_resolutions(clip)))
