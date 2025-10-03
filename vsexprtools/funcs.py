@@ -175,7 +175,16 @@ def combine(
     )
 
 
-type ExprLike = SupportsString | None | Iterable[ExprLike]
+type NestedStrLike = SupportsString | None | Iterable[NestedStrLike]
+"""
+A recursive type representing string-like values or collections thereof.
+
+Acceptable forms include:
+- A single string (or string-like object).
+- An iterable (list, tuple, etc.) containing other NestedStrLike values, which may themselves be further nested.
+"""
+
+type ExprLike = str | Sequence[NestedStrLike]
 """
 A recursive type representing a valid expression input.
 
