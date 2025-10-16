@@ -1,14 +1,30 @@
 from typing import ClassVar, Sequence
 
-from ._abstract import EdgeDetect, MagnitudeMatrix, Max
+from ._abstract import EdgeDetect, MagnitudeMatrix, Max, SingleMatrix
 
-__all__ = ["SuperExKirsch"]
+__all__ = ["SuperExKirsch", "SuperExLaplacian4"]
 
 
 class Matrix7x7(EdgeDetect):
     """
     Abstract base class for 7x7 convolution-based edge detectors.
     """
+
+
+class SuperExLaplacian4(SingleMatrix, Matrix7x7):
+    """
+    Super Extended Pierre-Simon de Laplace operator, 4th implementation.
+    """
+
+    matrices: ClassVar[Sequence[Sequence[float]]] = [
+        [-1, -1, -1, -1, -1, -1, -1,
+         -1, -1, -1, -1, -1, -1, -1,
+         -1, -1, -1, -1, -1, -1, -1,
+         -1, -1, -1, 48, -1, -1, -1,
+         -1, -1, -1, -1, -1, -1, -1,
+         -1, -1, -1, -1, -1, -1, -1,
+         -1, -1, -1, -1, -1, -1, -1]
+    ]  # fmt: skip
 
 
 class SuperExKirsch(Matrix7x7, MagnitudeMatrix, Max):
