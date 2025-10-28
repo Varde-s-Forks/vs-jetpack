@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from contextlib import suppress
 from string import capwords
-from typing import Any, Iterable, Mapping, Self
+from typing import Any, Iterable, Mapping, Self, overload
 
 from jetpytools import (
     CustomEnum,
@@ -94,6 +95,27 @@ class PropEnum(CustomIntEnum, metaclass=EnumABCMeta):
         Get an enum member from the frame properties or optionally fall back to resolution when strict=False.
         """
 
+    @overload
+    @classmethod
+    def from_param_with_fallback(cls, value: Any, fallback: None = None) -> Self | None: ...
+    @overload
+    @classmethod
+    def from_param_with_fallback[T](cls, value: Any, fallback: T) -> Self | T: ...
+    @classmethod
+    def from_param_with_fallback[T](cls, value: Any, fallback: T | None = None) -> Self | T | None:
+        with suppress(ValueError, TypeError):
+            # Will raise a ValueError or a TypeError if the value can't be casted to an integer
+            value = int(value)
+            casted = cls(value)
+
+            # If unspecified fallback to `fallback` value
+            if casted.is_unspecified():
+                raise TypeError
+
+            return casted
+
+        return fallback
+
     @classmethod
     def from_param_or_video(
         cls,
@@ -113,9 +135,10 @@ class PropEnum(CustomIntEnum, metaclass=EnumABCMeta):
             strict: Be strict about the frame properties. Default: False.
             func_except: Function returned for custom error handling.
         """
-        prop = cls.from_param(value, func_except)
+        prop = cls.from_param_with_fallback(value, None)
 
-        return prop if not prop.is_unspecified() else cls.from_video(src, strict, func_except)
+        # Delay the `from_video` call here to avoid unnecessary frame rendering
+        return prop if prop is not None else cls.from_video(src, strict, func_except)
 
     @classmethod
     def ensure_presence(cls, clip: vs.VideoNode, value: Any, func: FuncExcept | None = None) -> vs.VideoNode:

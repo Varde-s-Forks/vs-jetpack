@@ -756,8 +756,8 @@ class Resampler(BaseScaler):
         return (
             {
                 "format": get_video_format(format).id,
-                "matrix": Matrix.from_param(matrix),
-                "matrix_in": Matrix.from_param(matrix_in),
+                "matrix": Matrix.from_param_with_fallback(matrix),
+                "matrix_in": Matrix.from_param_with_fallback(matrix_in),
             }
             | self.kwargs
             | kwargs
@@ -994,10 +994,9 @@ class Kernel(Scaler, Descaler, Resampler):
         """
         return {
             "format": get_video_format(format).id,
-            "matrix": Matrix.from_param(matrix),
-            "matrix_in": Matrix.from_param(matrix_in),
+            "matrix": Matrix.from_param_with_fallback(matrix),
+            "matrix_in": Matrix.from_param_with_fallback(matrix_in),
         } | self.get_params_args(False, clip, **kwargs)
-
 
 class Bobber(BaseScaler):
     """
