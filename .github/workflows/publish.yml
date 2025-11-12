@@ -44,8 +44,8 @@ jobs:
       - name: Check the output
         run: uv run twine check --strict dist/*
 
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+      # - name: Publish to PyPI
+      #   uses: pypa/gh-action-pypi-publish@release/v1
 
       - name: Post webhook for failure
         if: failure()
