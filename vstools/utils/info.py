@@ -287,11 +287,12 @@ def show_frame_info(clip: vs.VideoNode, title: str | None = None, **sub_args: An
     """
     Write picture type, frame number and an optional title to the current frame as a overlay text.
 
-    Uses the `sub` plugin if available.
+    Uses the [`sub`](https://github.com/vapoursynth/subtext) plugin if available.
 
     Args:
         clip: Source clip.
         title: Optional title.
+        kwargs: Additional parameters passed to the `sub.Subtitle` or `text.Text` plugin.
 
     Returns:
         Clip with frame informations.
